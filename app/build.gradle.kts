@@ -44,6 +44,7 @@ android {
 
 dependencies {
     val nav_version = "2.9.0"
+    implementation ("androidx.compose.ui:ui-tooling-preview-android:1.8.2")
     implementation ("androidx.compose.material3:material3:1.2.0")
     implementation(libs.androidx.navigation.compose)
     implementation("androidx.navigation:navigation-fragment:$nav_version")
