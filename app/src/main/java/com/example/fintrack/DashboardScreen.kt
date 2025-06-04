@@ -61,7 +61,7 @@ fun DashboardScreen(navController: NavController) {
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Text(
-                "Home",
+                "Beranda",
                 style = MaterialTheme.typography.titleMedium
             )
             Icon(
@@ -120,7 +120,7 @@ fun DashboardScreen(navController: NavController) {
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Text("Income", fontWeight = FontWeight.Bold)
-                    Text("€6500.0", fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                    Text("IDR 6500.0", fontSize = 20.sp, fontWeight = FontWeight.Bold)
                 }
             }
 
@@ -131,7 +131,7 @@ fun DashboardScreen(navController: NavController) {
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Text("Spending", fontWeight = FontWeight.Bold)
-                    Text("€1980.0", fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                    Text("IDR 1980.0", fontSize = 20.sp, fontWeight = FontWeight.Bold)
                 }
             }
         }
