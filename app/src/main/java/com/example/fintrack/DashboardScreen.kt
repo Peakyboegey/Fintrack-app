@@ -50,6 +50,8 @@ import components.MonthYearPicker
 @Composable
 fun DashboardScreen(navController: NavController) {
     var selectedDate by remember { mutableStateOf("June 2025") }
+    var fabExpanded by remember { mutableStateOf(false) }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
