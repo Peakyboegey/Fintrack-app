@@ -61,7 +61,7 @@ fun DashboardScreen(navController: NavController) {
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Text(
-                "Beranda",
+                "Home",
                 style = MaterialTheme.typography.titleMedium
             )
             Icon(
