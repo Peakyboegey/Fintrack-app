@@ -119,7 +119,7 @@ fun DashboardScreen(navController: NavController) {
                 shape = RoundedCornerShape(12.dp)
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
-                    Text("Income", fontWeight = FontWeight.Bold)
+                    Text("Pemasukan", fontWeight = FontWeight.Bold)
                     Text("IDR 6500.0", fontSize = 20.sp, fontWeight = FontWeight.Bold)
                 }
             }
