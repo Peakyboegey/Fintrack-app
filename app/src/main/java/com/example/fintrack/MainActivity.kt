@@ -6,10 +6,16 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material3.FabPosition
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.core.view.WindowCompat
 import com.example.fintrack.ui.theme.FintrackTheme
@@ -17,17 +23,54 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
+import components.BottomNavBar
+import androidx.compose.runtime.getValue
+
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        WindowCompat.setDecorFitsSystemWindows(window, false) // enableEdgeToEdge()
+        WindowCompat.setDecorFitsSystemWindows(window, false)
+
         setContent {
             FintrackTheme {
                 val navController = rememberNavController()
 
+                // Dapatkan rute saat ini untuk kontrol tampilan bottom bar
+                val currentBackStackEntry by navController.currentBackStackEntryAsState()
+                val currentRoute = currentBackStackEntry?.destination?.route
+
+                // Tentukan kapan BottomNavBar ditampilkan
+                val showBottomBar = currentRoute in listOf(
+                    "dashboard", "home", "analysis", "transaction", "categories"
+                )
+
                 Scaffold(
-                    modifier = Modifier.fillMaxSize()
+                    modifier = Modifier.fillMaxSize(),
+                    floatingActionButton = {
+                        if (showBottomBar) {
+                            FloatingActionButton(
+                                onClick = {
+                                    navController.navigate("transaction")
+                                },
+                                containerColor = Color(0xFFDCD9FF)
+                            ) {
+                                Icon(Icons.Default.Add, contentDescription = "Add")
+                            }
+                        }
+                    },
+                    floatingActionButtonPosition = FabPosition.End,
+                    bottomBar = {
+                        if (showBottomBar) {
+                            BottomNavBar(
+                                navController = navController,
+                                onFabClick = {
+                                    navController.navigate("transaction")
+                                }
+                            )
+                        }
+                    }
                 ) { innerPadding ->
                     NavHost(
                         navController = navController,
@@ -39,6 +82,9 @@ class MainActivity : ComponentActivity() {
                         }
                         composable("dashboard") {
                             DashboardScreen(navController)
+                        }
+                        composable("transaction") {
+                            TransactionScreen(navController)
                         }
                     }
                 }

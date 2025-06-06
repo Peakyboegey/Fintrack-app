@@ -7,11 +7,14 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import androidx.navigation.NavGraph.Companion.findStartDestination
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 
 
@@ -21,98 +24,36 @@ fun BottomNavBar(
     onFabClick: () -> Unit
 ) {
     val items = listOf(
-        "Home" to Icons.Default.Home,
-        "Analysis" to Icons.Default.PieChart,
-        "Transaction" to Icons.Default.SwapHoriz,
-        "Categories" to Icons.Default.Category
+        NavItem("dashboard", Icons.Default.Home, "Home"), // Home mengarah ke dashboard
+        NavItem("analysis", Icons.Default.Assessment, "Analysis"),
+        NavItem("transaction", Icons.Default.List, "Transaction"),
+        NavItem("categories", Icons.Default.Category, "Categories"),
     )
 
-    Scaffold(
-        floatingActionButton = {
-            FloatingActionButton(
-                onClick = onFabClick,
-                containerColor = Color(0xFFDCD9FF)
-            ) {
-                Icon(Icons.Default.Add, contentDescription = "Add")
-            }
-        },
-        floatingActionButtonPosition = FabPosition.End,
-        bottomBar = {
-            NavigationBar(containerColor = Color(0xFFEFEFFF)) {
-                items.forEach { (label, icon) ->
-                    NavigationBarItem(
-                        selected = false,
-                        onClick = { navController.navigate(label) },
-                        icon = { Icon(icon, contentDescription = label) },
-                        label = { Text(label, fontSize = 10.sp) }
-                    )
+    val currentBackStackEntry by navController.currentBackStackEntryAsState()
+    val currentRoute = currentBackStackEntry?.destination?.route
+
+    NavigationBar {
+        items.forEach { item ->
+            NavigationBarItem(
+                icon = { Icon(item.icon, contentDescription = item.title) },
+                label = { Text(item.title) },
+                selected = currentRoute == item.route,
+                onClick = {
+                    if (currentRoute != item.route) {
+                        navController.navigate(item.route) {
+                            popUpTo(navController.graph.findStartDestination().id) {
+                                saveState = true
+                            }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                    }
                 }
-            }
-        }
-    ) { innerPadding ->
-        Box(modifier = Modifier
-            .fillMaxSize()
-            .padding(innerPadding)) {
-        }
-    }
-}
-
-@Composable
-fun FabMenu(
-    expanded: Boolean,
-    onDismiss: () -> Unit,
-    onNavigate: (String) -> Unit
-) {
-    DropdownMenu(
-        expanded = expanded,
-        onDismissRequest = onDismiss,
-        offset = DpOffset(x = (-40).dp, y = (-60).dp)
-    ) {
-        DropdownMenuItem(
-            text = { Text("Add Transaction") },
-            onClick = {
-                onDismiss()
-                onNavigate("AddTransaction")
-            }
-        )
-        DropdownMenuItem(
-            text = { Text("Add Category") },
-            onClick = {
-                onDismiss()
-                onNavigate("AddCategory")
-            }
-        )
-    }
-}
-
-@Preview(showBackground = true, widthDp = 360, heightDp = 640)
-@Composable
-fun FintrackDashboardPreview() {
-    val navController = rememberNavController()
-    var fabExpanded by remember { mutableStateOf(false) }
-
-    MaterialTheme {
-        Scaffold(
-            bottomBar = {
-                BottomNavBar(
-                    navController = navController,
-                    onFabClick = { fabExpanded = true }
-                )
-            }
-        ) { innerPadding ->
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(innerPadding)
-            ) {
-                // Konten utama dashboard
-            }
-
-            FabMenu(
-                expanded = fabExpanded,
-                onDismiss = { fabExpanded = false },
-                onNavigate = { /* implementasi navigasi */ }
             )
         }
     }
 }
+
+data class NavItem(val route: String, val icon: ImageVector, val title: String)
+
