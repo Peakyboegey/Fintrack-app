@@ -43,7 +43,7 @@ class MainActivity : ComponentActivity() {
 
                 // Tentukan kapan BottomNavBar ditampilkan
                 val showBottomBar = currentRoute in listOf(
-                    "dashboard", "home", "analysis", "transaction", "categories"
+                    "dashboard", "home", "analysis", "transaction", "categories", "dashboard", "home", "analysis", "transaction", "categories", "income", "spending"
                 )
 
                 Scaffold(
@@ -85,6 +85,12 @@ class MainActivity : ComponentActivity() {
                         }
                         composable("transaction") {
                             TransactionScreen(navController)
+                        }
+                        composable("income") {
+                            IncomeScreen(navController)
+                        }
+                        composable("spending") {
+                            SpendingScreen(navController)
                         }
                     }
                 }

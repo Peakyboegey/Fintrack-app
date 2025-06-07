@@ -1,45 +1,65 @@
 package com.example.fintrack
 
-
 import android.annotation.SuppressLint
 import android.app.DatePickerDialog
 import android.app.TimePickerDialog
-import android.widget.TimePicker
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
-import androidx.compose.ui.*
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.filled.AccessTime
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Checkroom
+import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material.icons.filled.Description
+import androidx.compose.material.icons.filled.KeyboardArrowRight
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.*
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import androidx.navigation.compose.currentBackStackEntryAsState
-import androidx.navigation.compose.rememberNavController
 import java.text.SimpleDateFormat
-import java.util.*
+import java.util.Calendar
+import java.util.Locale
 
 @SuppressLint("UnrememberedGetBackStackEntry")
 @Composable
-fun TransactionScreen(navController: NavController) {
-    // Ambil category dari savedStateHandle
+fun SpendingScreen(navController: NavController) {
     val backStackEntry = remember {
-        navController.getBackStackEntry("transaction")
+        navController.getBackStackEntry("spending")
     }
     val categoryState = backStackEntry.savedStateHandle
         .getStateFlow("selected_category", "Clothing")
         .collectAsState()
-    val transactionTypes = listOf("Income", "Spending")
-    var selectedType by remember { mutableStateOf("Spending") }
+
     val context = LocalContext.current
     val calendar = Calendar.getInstance()
+
     var selectedDate by remember { mutableStateOf(SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(calendar.time)) }
     var selectedTime by remember { mutableStateOf(SimpleDateFormat("HH:mm", Locale.getDefault()).format(calendar.time)) }
-    var amount by remember { mutableStateOf("6500.00") }
+    var amount by remember { mutableStateOf("") }
     val selectedCategory = categoryState.value
     var notes by remember { mutableStateOf("") }
 
@@ -48,45 +68,7 @@ fun TransactionScreen(navController: NavController) {
             .fillMaxSize()
             .padding(16.dp)
     ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Icon(Icons.Default.Close, contentDescription = "Close")
-            Spacer(modifier = Modifier.width(8.dp))
-            Text("Transaction", style = MaterialTheme.typography.titleLarge)
-        }
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            transactionTypes.forEach {
-                val isSelected = it == selectedType
-                Button(
-                    onClick = {
-                        selectedType = it
-
-                        when (it) {
-                            "Income" -> navController.navigate("income")
-                            "Spending" -> navController.navigate("spending")
-                        }
-                    },
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = if (isSelected) {
-                            when (it) {
-                                "Income" -> Color(0xFFB8E5B8)
-                                "Spending" -> Color(0xFFFFCCCC)
-                                else -> Color.LightGray
-                            }
-                        } else Color.White
-                    ),
-                    modifier = Modifier.weight(1f)
-                ) {
-                    Text(it, color = if (isSelected) Color.Black else Color.Gray)
-                }
-                Spacer(modifier = Modifier.width(8.dp))
-            }
-        }
+        Text("Spending", style = MaterialTheme.typography.titleLarge)
 
         Spacer(modifier = Modifier.height(20.dp))
 
@@ -112,11 +94,11 @@ fun TransactionScreen(navController: NavController) {
                         ).show()
                     },
                 label = { Text("Select Date") },
-                leadingIcon = {
-                    Icon(Icons.Default.DateRange, contentDescription = "Date")
-                }
+                leadingIcon = { Icon(Icons.Default.DateRange, contentDescription = "Date") }
             )
+
             Spacer(modifier = Modifier.width(16.dp))
+
             OutlinedTextField(
                 value = selectedTime,
                 onValueChange = {},
@@ -126,7 +108,7 @@ fun TransactionScreen(navController: NavController) {
                     .clickable {
                         TimePickerDialog(
                             context,
-                            { _: TimePicker, hour: Int, minute: Int ->
+                            { _, hour, minute ->
                                 selectedTime = "%02d:%02d".format(hour, minute)
                             },
                             calendar.get(Calendar.HOUR_OF_DAY),
@@ -135,9 +117,7 @@ fun TransactionScreen(navController: NavController) {
                         ).show()
                     },
                 label = { Text("Select Time") },
-                leadingIcon = {
-                    Icon(Icons.Default.AccessTime, contentDescription = "Time")
-                }
+                leadingIcon = { Icon(Icons.Default.AccessTime, contentDescription = "Time") }
             )
         }
 
@@ -176,28 +156,18 @@ fun TransactionScreen(navController: NavController) {
             onValueChange = { notes = it },
             label = { Text("Notes") },
             placeholder = { Text("Optional details") },
-            leadingIcon = {
-                Icon(Icons.Default.Description, contentDescription = "Notes")
-            },
+            leadingIcon = { Icon(Icons.Default.Description, contentDescription = "Notes") },
             modifier = Modifier.fillMaxWidth()
         )
 
         Spacer(modifier = Modifier.height(32.dp))
 
         FloatingActionButton(
-            onClick = { /* Save action */ },
-            containerColor = Color(0xFFE0E0FF),
+            onClick = { /* Save spending action */ },
+            containerColor = Color(0xFFFFCCCC),
             modifier = Modifier.align(Alignment.End)
         ) {
             Icon(Icons.Default.Check, contentDescription = "Submit")
         }
     }
-}
-
-
-@Preview(showBackground = true)
-@Composable
-fun PreviewTransactionScreen() {
-    val navController = rememberNavController()
-    TransactionScreen(navController = navController)
 }
