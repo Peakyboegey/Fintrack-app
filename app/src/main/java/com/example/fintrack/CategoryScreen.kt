@@ -31,6 +31,18 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+import androidx.compose.material.icons.filled.*
+import androidx.compose.ui.graphics.vector.ImageVector
+
+fun getCategoryIcon(category: String): ImageVector {
+    return when (category.lowercase()) {
+        "clothing" -> Icons.Default.Checkroom
+        "food" -> Icons.Default.Restaurant
+        "transport" -> Icons.Default.DirectionsCar
+        "utilities" -> Icons.Default.Bolt
+        else -> Icons.Default.Category // default icon
+    }
+}
 
 @Composable
 fun CategoryScreen(navController: NavController, onCategorySelected: (String) -> Unit) {
@@ -58,11 +70,16 @@ fun CategoryScreen(navController: NavController, onCategorySelected: (String) ->
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clickable { onCategorySelected(category) }
+                    .clickable {
+                        navController.previousBackStackEntry
+                            ?.savedStateHandle
+                            ?.set("selected_category", category)
+                        navController.popBackStack()
+                    }
                     .padding(vertical = 12.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Icon(Icons.Default.Category, contentDescription = null)
+                Icon(getCategoryIcon(category), contentDescription = category)
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(category, fontSize = 16.sp)
             }
@@ -98,4 +115,15 @@ fun CategoryScreen(navController: NavController, onCategorySelected: (String) ->
             Text("Add")
         }
     }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun CategoryScreenPreview() {
+    val navController = rememberNavController()
+
+    CategoryScreen(
+        navController = navController,
+        onCategorySelected = { /* Preview: no-op */ }
+    )
 }

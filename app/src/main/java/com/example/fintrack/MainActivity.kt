@@ -83,9 +83,6 @@ class MainActivity : ComponentActivity() {
                         composable("dashboard") {
                             DashboardScreen(navController)
                         }
-                        composable("transaction") {
-                            TransactionScreen(navController)
-                        }
                         composable("income") {
                             IncomeScreen(navController)
                         }

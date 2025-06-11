@@ -67,7 +67,12 @@ fun SpendingScreen(navController: NavController) {
     var selectedDate by remember { mutableStateOf(SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(calendar.time)) }
     var selectedTime by remember { mutableStateOf(SimpleDateFormat("HH:mm", Locale.getDefault()).format(calendar.time)) }
     var amount by remember { mutableStateOf("") }
-    val selectedCategory = categoryState.value
+    val selectedCategory = navController
+        .currentBackStackEntry
+        ?.savedStateHandle
+        ?.getStateFlow("selected_category", "Clothing")
+        ?.collectAsState()
+        ?.value ?: "Clothing"
     var notes by remember { mutableStateOf("") }
 
 
@@ -78,7 +83,7 @@ fun SpendingScreen(navController: NavController) {
     ) {
         Text("Spending", style = MaterialTheme.typography.titleLarge)
 
-        Spacer(modifier = Modifier.height(20.dp))
+        Spacer(modifier = Modifier.height(16.dp))
 
         Row(
             modifier = Modifier
@@ -113,6 +118,8 @@ fun SpendingScreen(navController: NavController) {
                 }
             }
         }
+
+        Spacer(modifier = Modifier.height(16.dp))
 
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -184,7 +191,7 @@ fun SpendingScreen(navController: NavController) {
                 .padding(8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Icon(Icons.Default.Category, contentDescription = "Category", tint = Color.Red)
+            Icon(getCategoryIcon(selectedCategory), contentDescription = "Category", tint = Color.Red)
             Spacer(modifier = Modifier.width(8.dp))
             Text(selectedCategory)
             Spacer(modifier = Modifier.weight(1f))
