@@ -52,7 +52,7 @@ class MainActivity : ComponentActivity() {
                         if (showBottomBar) {
                             FloatingActionButton(
                                 onClick = {
-                                    navController.navigate("transaction")
+                                    navController.navigate("income")
                                 },
                                 containerColor = Color(0xFFDCD9FF)
                             ) {
