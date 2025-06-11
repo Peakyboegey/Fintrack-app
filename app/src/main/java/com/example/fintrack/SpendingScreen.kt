@@ -40,9 +40,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
@@ -209,4 +211,11 @@ fun SpendingScreen(navController: NavController) {
             Icon(Icons.Default.Check, contentDescription = "Submit")
         }
     }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun SpendingScreenPreview() {
+    val navController = rememberNavController() // Fake NavController
+    SpendingScreen(navController = navController)
 }
