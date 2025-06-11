@@ -11,8 +11,10 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Category
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -27,21 +29,31 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 
 @Composable
-fun CategoryScreen(onCategorySelected: (String) -> Unit) {
-    // State daftar kategori
+fun CategoryScreen(navController: NavController, onCategorySelected: (String) -> Unit) {
     var categories by remember { mutableStateOf(listOf("Clothing", "Food", "Transport", "Utilities")) }
-
-    // State untuk input kategori baru
     var newCategory by remember { mutableStateOf("") }
 
     Column(modifier = Modifier.padding(16.dp)) {
+
+        // Row untuk tombol Quit
+        Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+            Spacer(modifier = Modifier.weight(1f))
+            IconButton(onClick = {
+                navController.navigate("spending") {
+                    popUpTo("category") { inclusive = true } // hapus halaman kategori dari stack jika mau
+                }
+            }) {
+                Icon(Icons.Default.Close, contentDescription = "Close")
+            }
+        }
+
         Text("Select a Category", style = MaterialTheme.typography.titleLarge)
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Tampilkan kategori yang ada
         categories.forEach { category ->
             Row(
                 modifier = Modifier
@@ -58,7 +70,6 @@ fun CategoryScreen(onCategorySelected: (String) -> Unit) {
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        // Input kategori baru
         Text("Add New Category", fontWeight = FontWeight.Bold)
         Spacer(modifier = Modifier.height(8.dp))
 
@@ -88,4 +99,3 @@ fun CategoryScreen(onCategorySelected: (String) -> Unit) {
         }
     }
 }
-

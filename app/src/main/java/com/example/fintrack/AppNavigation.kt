@@ -19,13 +19,14 @@ fun AppNavHost(navController: NavHostController, modifier: Modifier = Modifier) 
         composable("income") { IncomeScreen(navController) }
         composable("spending") { SpendingScreen(navController) }
         composable("select_category") {
-            CategoryScreen { selected ->
+            CategoryScreen(navController = navController) { selectedCategory ->
                 navController.previousBackStackEntry
                     ?.savedStateHandle
-                    ?.set("selected_category", selected)
+                    ?.set("selected_category", selectedCategory)
                 navController.popBackStack()
             }
         }
     }
 }
+
 

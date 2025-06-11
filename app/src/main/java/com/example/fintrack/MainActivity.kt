@@ -92,6 +92,15 @@ class MainActivity : ComponentActivity() {
                         composable("spending") {
                             SpendingScreen(navController)
                         }
+                        composable("select_category") {
+                            CategoryScreen(navController = navController) { selectedCategory ->
+                                navController.previousBackStackEntry
+                                    ?.savedStateHandle
+                                    ?.set("selected_category", selectedCategory)
+                                navController.popBackStack()
+                            }
+                        }
+
                     }
                 }
             }

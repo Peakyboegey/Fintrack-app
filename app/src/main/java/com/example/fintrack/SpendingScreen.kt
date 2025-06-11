@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.AccessTime
+import androidx.compose.material.icons.filled.Category
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Checkroom
 import androidx.compose.material.icons.filled.DateRange
@@ -183,7 +184,7 @@ fun SpendingScreen(navController: NavController) {
                 .padding(8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Icon(Icons.Default.Checkroom, contentDescription = "Category", tint = Color.Red)
+            Icon(Icons.Default.Category, contentDescription = "Category", tint = Color.Red)
             Spacer(modifier = Modifier.width(8.dp))
             Text(selectedCategory)
             Spacer(modifier = Modifier.weight(1f))
