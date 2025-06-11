@@ -3,6 +3,7 @@ package com.example.fintrack
 import android.annotation.SuppressLint
 import android.app.DatePickerDialog
 import android.app.TimePickerDialog
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -21,6 +22,8 @@ import androidx.compose.material.icons.filled.Checkroom
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.KeyboardArrowRight
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -56,12 +59,14 @@ fun SpendingScreen(navController: NavController) {
 
     val context = LocalContext.current
     val calendar = Calendar.getInstance()
-
+    var selectedType by remember { mutableStateOf("Income") }
+    val transactionTypes = listOf("Income", "Spending")
     var selectedDate by remember { mutableStateOf(SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(calendar.time)) }
     var selectedTime by remember { mutableStateOf(SimpleDateFormat("HH:mm", Locale.getDefault()).format(calendar.time)) }
     var amount by remember { mutableStateOf("") }
     val selectedCategory = categoryState.value
     var notes by remember { mutableStateOf("") }
+
 
     Column(
         modifier = Modifier
@@ -71,6 +76,40 @@ fun SpendingScreen(navController: NavController) {
         Text("Spending", style = MaterialTheme.typography.titleLarge)
 
         Spacer(modifier = Modifier.height(20.dp))
+
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 8.dp),
+            horizontalArrangement = Arrangement.SpaceEvenly
+        ) {
+            transactionTypes.forEach {
+                val isSelected = it == selectedType
+                Button(
+                    onClick = {
+                        selectedType = it
+                        if (it == "Income") {
+                            navController.navigate("income") // navigasi ke SpendingScreen
+                        }
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = if (isSelected) {
+                            when (it) {
+                                "Income" -> Color.White
+                                "Spending" -> Color(0xFFFFCCCC)
+                                else -> Color.LightGray
+                            }
+                        } else Color.Transparent
+                    ),
+                    border = BorderStroke(1.dp, Color.LightGray),
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(horizontal = 4.dp)
+                ) {
+                    Text(it, color = if (isSelected) Color.Black else Color.Gray)
+                }
+            }
+        }
 
         Row(
             modifier = Modifier.fillMaxWidth(),
