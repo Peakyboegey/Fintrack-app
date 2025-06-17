@@ -1,5 +1,6 @@
 package com.example.fintrack
 
+import android.util.Log
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -33,6 +34,8 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import androidx.compose.material.icons.filled.*
 import androidx.compose.ui.graphics.vector.ImageVector
+import com.google.firebase.firestore.FirebaseFirestore
+
 
 fun getCategoryIcon(category: String): ImageVector {
     return when (category.lowercase()) {
@@ -104,6 +107,7 @@ fun CategoryScreen(navController: NavController, onCategorySelected: (String) ->
                 val trimmed = newCategory.trim()
                 if (trimmed.isNotEmpty() && !categories.contains(trimmed)) {
                     categories = categories + trimmed
+                    addCategoryToFirestore(trimmed) // simpan ke Firestore
                     newCategory = ""
                 }
             },
@@ -115,6 +119,20 @@ fun CategoryScreen(navController: NavController, onCategorySelected: (String) ->
             Text("Add")
         }
     }
+}
+
+fun addCategoryToFirestore(category: String) {
+    val db = FirebaseFirestore.getInstance()
+    val categoryData = hashMapOf("name" to category)
+
+    db.collection("categories")
+        .add(categoryData)
+        .addOnSuccessListener { documentReference ->
+            Log.d("Firestore", "Category added with ID: ${documentReference.id}")
+        }
+        .addOnFailureListener { e ->
+            Log.w("Firestore", "Error adding category", e)
+        }
 }
 
 @Preview(showBackground = true)

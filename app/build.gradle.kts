@@ -44,6 +44,11 @@ android {
 
 dependencies {
     val nav_version = "2.9.0"
+    implementation ("com.google.firebase:firebase-analytics")
+    implementation (platform("com.google.firebase:firebase-bom:33.15.0"))
+    implementation("com.google.firebase:firebase-firestore")
+    implementation ("com.google.firebase:firebase-firestore-ktx")
+    implementation("com.google.firebase:firebase-firestore-ktx:25.0.0")
     implementation ("androidx.compose.material:material-icons-extended")
     implementation ("androidx.compose.material:material-icons-extended:1.6.0")
     implementation ("androidx.compose.ui:ui-tooling-preview-android:1.8.2")
@@ -70,5 +75,6 @@ dependencies {
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
-
 }
+
+apply(plugin = "com.google.gms.google-services")
