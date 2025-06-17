@@ -1,5 +1,6 @@
 package com.example.fintrack
 
+import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -30,6 +31,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -38,19 +40,44 @@ import androidx.compose.ui.Alignment
 import androidx.navigation.NavController
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.compose.rememberNavController
+import com.google.firebase.firestore.FirebaseFirestore
 import components.MonthYearPicker
 
 
 @Composable
 fun DashboardScreen(navController: NavController) {
+    val context = LocalContext.current
+    val firestore = FirebaseFirestore.getInstance()
     var selectedDate by remember { mutableStateOf("June 2025") }
-    var fabExpanded by remember { mutableStateOf(false) }
+    var totalIncome by remember { mutableStateOf(0.0) }
+
+
+    // Fetch income data from Firestore
+    LaunchedEffect(Unit) {
+        firestore.collection("incomes")
+            .get()
+            .addOnSuccessListener { result ->
+                val total = result.documents.sumOf { doc ->
+                    val rawAmount = doc.get("amount")
+                    when (rawAmount) {
+                        is Number -> rawAmount.toDouble()
+                        is String -> rawAmount.toDoubleOrNull() ?: 0.0
+                        else -> 0.0
+                    }
+                }
+                totalIncome = total
+            }
+            .addOnFailureListener {
+                Toast.makeText(context, "Failed to fetch income", Toast.LENGTH_SHORT).show()
+            }
+    }
 
     Column(
         modifier = Modifier
@@ -63,7 +90,7 @@ fun DashboardScreen(navController: NavController) {
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Text(
-                "Beranda",
+                "Home",
                 style = MaterialTheme.typography.titleMedium
             )
             Icon(
@@ -121,8 +148,8 @@ fun DashboardScreen(navController: NavController) {
                 shape = RoundedCornerShape(12.dp)
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
-                    Text("Pemasukan", fontWeight = FontWeight.Bold)
-                    Text("IDR 6500.0", fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                    Text("Income", fontWeight = FontWeight.Bold)
+                    Text("IDR %.2f".format(totalIncome), fontSize = 20.sp, fontWeight = FontWeight.Bold)
                 }
             }
 
@@ -133,7 +160,7 @@ fun DashboardScreen(navController: NavController) {
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Text("Spending", fontWeight = FontWeight.Bold)
-                    Text("IDR 1980.0", fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                    Text("IDR 0.0", fontSize = 20.sp, fontWeight = FontWeight.Bold) // bisa diisi nanti
                 }
             }
         }

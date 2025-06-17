@@ -2,6 +2,8 @@ package com.example.fintrack
 
 import android.app.DatePickerDialog
 import android.app.TimePickerDialog
+import android.util.Log
+import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -39,9 +41,32 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+import com.google.firebase.firestore.FieldValue
+import com.google.firebase.firestore.FirebaseFirestore
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
+
+fun saveIncomeToFirestore(date: String, time: String, amount: String, notes: String) {
+    val db = FirebaseFirestore.getInstance()
+
+    val incomeData = hashMapOf(
+        "date" to date,
+        "time" to time,
+        "amount" to (amount.toDoubleOrNull() ?: 0.0),
+        "notes" to notes,
+        "timestamp" to FieldValue.serverTimestamp()
+    )
+
+    db.collection("incomes")
+        .add(incomeData)
+        .addOnSuccessListener {
+            Log.d("Firestore", "Income added with ID: ${it.id}")
+        }
+        .addOnFailureListener { e ->
+            Log.w("Firestore", "Error adding income", e)
+        }
+}
 
 @Composable
 fun IncomeScreen(navController: NavController) {
@@ -171,7 +196,12 @@ fun IncomeScreen(navController: NavController) {
         Spacer(modifier = Modifier.height(32.dp))
 
         FloatingActionButton(
-            onClick = { /* Save income action */ },
+            onClick = {
+                saveIncomeToFirestore(selectedDate, selectedTime, amount, notes)
+                Toast.makeText(context, "Income Saved", Toast.LENGTH_SHORT).show()
+                // Optional: navigate back to dashboard
+                navController.navigate("dashboard")
+            },
             containerColor = Color(0xFFB8E5B8),
             modifier = Modifier.align(Alignment.End)
         ) {
