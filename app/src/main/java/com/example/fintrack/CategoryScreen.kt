@@ -35,6 +35,8 @@ import androidx.navigation.compose.rememberNavController
 import androidx.compose.material.icons.filled.*
 import androidx.compose.ui.graphics.vector.ImageVector
 import com.google.firebase.firestore.FirebaseFirestore
+import androidx.lifecycle.viewmodel.compose.viewModel
+
 
 
 fun getCategoryIcon(category: String): ImageVector {
@@ -48,19 +50,19 @@ fun getCategoryIcon(category: String): ImageVector {
 }
 
 @Composable
-fun CategoryScreen(navController: NavController, onCategorySelected: (String) -> Unit) {
-    var categories by remember { mutableStateOf(listOf("Clothing", "Food", "Transport", "Utilities")) }
+fun CategoryScreen(
+    navController: NavController,
+    onCategorySelected: (String) -> Unit
+) {
+    val viewModel: CategoryViewModel = viewModel()
+    val categories = viewModel.categories
     var newCategory by remember { mutableStateOf("") }
 
     Column(modifier = Modifier.padding(16.dp)) {
-
-        // Row untuk tombol Quit
         Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
             Spacer(modifier = Modifier.weight(1f))
             IconButton(onClick = {
-                navController.navigate("spending") {
-                    popUpTo("category") { inclusive = true } // hapus halaman kategori dari stack jika mau
-                }
+                navController.popBackStack()
             }) {
                 Icon(Icons.Default.Close, contentDescription = "Close")
             }
@@ -74,10 +76,7 @@ fun CategoryScreen(navController: NavController, onCategorySelected: (String) ->
                 modifier = Modifier
                     .fillMaxWidth()
                     .clickable {
-                        navController.previousBackStackEntry
-                            ?.savedStateHandle
-                            ?.set("selected_category", category)
-                        navController.popBackStack()
+                        onCategorySelected(category) // ✅ Gunakan parameter
                     }
                     .padding(vertical = 12.dp),
                 verticalAlignment = Alignment.CenterVertically
@@ -89,7 +88,6 @@ fun CategoryScreen(navController: NavController, onCategorySelected: (String) ->
         }
 
         Spacer(modifier = Modifier.height(24.dp))
-
         Text("Add New Category", fontWeight = FontWeight.Bold)
         Spacer(modifier = Modifier.height(8.dp))
 
@@ -106,8 +104,7 @@ fun CategoryScreen(navController: NavController, onCategorySelected: (String) ->
             onClick = {
                 val trimmed = newCategory.trim()
                 if (trimmed.isNotEmpty() && !categories.contains(trimmed)) {
-                    categories = categories + trimmed
-                    addCategoryToFirestore(trimmed) // simpan ke Firestore
+                    viewModel.addCategory(trimmed)
                     newCategory = ""
                 }
             },
@@ -122,26 +119,18 @@ fun CategoryScreen(navController: NavController, onCategorySelected: (String) ->
 }
 
 fun addCategoryToFirestore(category: String) {
-    val db = FirebaseFirestore.getInstance()
-    val categoryData = hashMapOf("name" to category)
+        val db = FirebaseFirestore.getInstance()
+        val categoryData = hashMapOf("name" to category)
 
-    db.collection("categories")
-        .add(categoryData)
-        .addOnSuccessListener { documentReference ->
-            Log.d("Firestore", "Category added with ID: ${documentReference.id}")
-        }
-        .addOnFailureListener { e ->
-            Log.w("Firestore", "Error adding category", e)
-        }
+        db.collection("categories")
+            .add(categoryData)
+            .addOnSuccessListener { documentReference ->
+                Log.d("Firestore", "Category added with ID: ${documentReference.id}")
+            }
+            .addOnFailureListener { e ->
+                Log.w("Firestore", "Error adding category", e)
+            }
+
 }
 
-@Preview(showBackground = true)
-@Composable
-fun CategoryScreenPreview() {
-    val navController = rememberNavController()
 
-    CategoryScreen(
-        navController = navController,
-        onCategorySelected = { /* Preview: no-op */ }
-    )
-}
