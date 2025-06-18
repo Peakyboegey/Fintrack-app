@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.app.DatePickerDialog
 import android.app.TimePickerDialog
 import android.util.Log
+import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -48,10 +49,38 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.Query
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
+
+class SpendingViewModel : ViewModel() {
+    private val _spendings = mutableStateListOf<Map<String, Any>>()  // Atau bikin data class
+    val spendings: List<Map<String, Any>> get() = _spendings
+
+    init {
+        fetchSpendings()
+    }
+
+    fun fetchSpendings() {
+        FirebaseFirestore.getInstance()
+            .collection("spending")
+            .orderBy("timestamp", Query.Direction.DESCENDING)
+            .addSnapshotListener { snapshots, e ->
+                if (e != null) {
+                    Log.w("SpendingViewModel", "Listen failed.", e)
+                    return@addSnapshotListener
+                }
+
+                _spendings.clear()
+                for (doc in snapshots!!) {
+                    _spendings.add(doc.data)
+                }
+            }
+    }
+}
 
 class CategoryViewModel : ViewModel() {
     private val _categories = mutableStateListOf<String>()
@@ -79,7 +108,6 @@ class CategoryViewModel : ViewModel() {
             }
     }
 
-    // ⬇️ Tambahkan di sini
     fun addCategory(category: String) {
         val db = FirebaseFirestore.getInstance()
         val categoryData = hashMapOf("name" to category)
@@ -87,7 +115,7 @@ class CategoryViewModel : ViewModel() {
         db.collection("categories")
             .add(categoryData)
             .addOnSuccessListener {
-                _categories.add(category) // update daftar lokal
+                _categories.add(category)
             }
             .addOnFailureListener {
                 Log.w("CategoryViewModel", "Failed to add category", it)
@@ -99,6 +127,7 @@ class CategoryViewModel : ViewModel() {
 @Composable
 fun SpendingScreen(navController: NavController, viewModel: CategoryViewModel = viewModel()) {
     val categories = viewModel.categories
+
     val backStackEntry = remember {
         navController.getBackStackEntry("spending")
     }
@@ -107,18 +136,26 @@ fun SpendingScreen(navController: NavController, viewModel: CategoryViewModel = 
         .collectAsState()
 
     val context = LocalContext.current
+
     val calendar = Calendar.getInstance()
+
     var selectedType by remember { mutableStateOf("Income") }
+
     val transactionTypes = listOf("Income", "Spending")
+
     var selectedDate by remember { mutableStateOf(SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(calendar.time)) }
+
     var selectedTime by remember { mutableStateOf(SimpleDateFormat("HH:mm", Locale.getDefault()).format(calendar.time)) }
+
     var amount by remember { mutableStateOf("") }
+
     val selectedCategory = navController
         .currentBackStackEntry
         ?.savedStateHandle
         ?.getStateFlow("selected_category", "Clothing")
         ?.collectAsState()
         ?.value ?: "Clothing"
+
     var notes by remember { mutableStateOf("") }
 
 
@@ -144,7 +181,7 @@ fun SpendingScreen(navController: NavController, viewModel: CategoryViewModel = 
                     onClick = {
                         selectedType = it
                         if (it == "Income") {
-                            navController.navigate("income") // navigasi ke SpendingScreen
+                            navController.navigate("income")
                         }
                     },
                     colors = ButtonDefaults.buttonColors(
@@ -253,7 +290,31 @@ fun SpendingScreen(navController: NavController, viewModel: CategoryViewModel = 
         Spacer(modifier = Modifier.height(32.dp))
 
         FloatingActionButton(
-            onClick = { /* Save spending action */ },
+            onClick = {
+                val db = FirebaseFirestore.getInstance()
+                val spendingData = hashMapOf(
+                    "date" to selectedDate,
+                    "time" to selectedTime,
+                    "amount" to (amount.toDoubleOrNull() ?: 0.0),
+                    "category" to selectedCategory,
+                    "notes" to notes,
+                    "timestamp" to FieldValue.serverTimestamp()
+                )
+
+                db.collection("spending")
+                    .add(spendingData)
+                    .addOnSuccessListener {
+                        Toast.makeText(context, "Spending saved", Toast.LENGTH_SHORT).show()
+
+                        // (Opsional) kurangi saldo global di Firestore jika kamu simpan
+                        // updateBalance(-amount.toDoubleOrNull() ?: 0.0)
+
+                        navController.popBackStack()
+                    }
+                    .addOnFailureListener {
+                        Toast.makeText(context, "Failed to save", Toast.LENGTH_SHORT).show()
+                    }
+            },
             containerColor = Color(0xFFFFCCCC),
             modifier = Modifier.align(Alignment.End)
         ) {

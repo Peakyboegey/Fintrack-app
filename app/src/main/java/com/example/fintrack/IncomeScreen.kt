@@ -45,6 +45,7 @@ import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import java.text.SimpleDateFormat
 import java.util.Calendar
+import java.util.Date
 import java.util.Locale
 
 fun saveIncomeToFirestore(date: String, time: String, amount: String, notes: String) {
@@ -55,10 +56,10 @@ fun saveIncomeToFirestore(date: String, time: String, amount: String, notes: Str
         "time" to time,
         "amount" to (amount.toDoubleOrNull() ?: 0.0),
         "notes" to notes,
-        "timestamp" to FieldValue.serverTimestamp()
+        "timestamp" to Date()
     )
 
-    db.collection("incomes")
+    db.collection("income")
         .add(incomeData)
         .addOnSuccessListener {
             Log.d("Firestore", "Income added with ID: ${it.id}")
