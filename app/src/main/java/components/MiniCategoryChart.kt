@@ -8,10 +8,12 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -34,29 +36,31 @@ fun MiniCategoryChart(viewModel: CategoriesViewModel = viewModel()) {
         val total = floatData.values.sum()
         var startAngle = 0f
 
-        Column {
-            Text(
-                "Spending by Category",
-                style = MaterialTheme.typography.titleSmall,
-                modifier = Modifier.padding(bottom = 8.dp)
-            )
-
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(130.dp),
-                shape = RoundedCornerShape(10.dp),
-                colors = CardDefaults.cardColors(containerColor = Color(0xFFF4F4F4))
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .wrapContentHeight(),
+            shape = RoundedCornerShape(12.dp),
+            colors = CardDefaults.cardColors(containerColor = Color(0xFFF9F9F9))
+        ) {
+            Column(
+                modifier = Modifier.padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                Row(
+                Text(
+                    text = "Spending by Category",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold
+                )
+
+                // Pie Chart
+                Box(
                     modifier = Modifier
-                        .fillMaxSize()
-                        .padding(8.dp),
-                    verticalAlignment = Alignment.CenterVertically
+                        .fillMaxWidth()
+                        .height(120.dp),
+                    contentAlignment = Alignment.Center
                 ) {
-                    Canvas(
-                        modifier = Modifier.size(80.dp)
-                    ) {
+                    Canvas(modifier = Modifier.size(100.dp)) {
                         floatData.entries.forEachIndexed { index, entry ->
                             val sweep = 360f * (entry.value / total)
                             drawArc(
@@ -68,20 +72,26 @@ fun MiniCategoryChart(viewModel: CategoriesViewModel = viewModel()) {
                             startAngle += sweep
                         }
                     }
+                }
 
-                    Spacer(modifier = Modifier.width(12.dp))
-
-                    LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        items(floatData.entries.toList()) { (category, _) ->
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Box(
-                                    modifier = Modifier
-                                        .size(8.dp)
-                                        .background(colors[category.hashCode() % colors.size])
-                                )
-                                Spacer(modifier = Modifier.width(4.dp))
-                                Text(category, fontSize = 10.sp)
-                            }
+                // Legend
+                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    floatData.entries.forEachIndexed { index, (category, value) ->
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(10.dp)
+                                    .clip(CircleShape)
+                                    .background(colors[index % colors.size])
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = "$category (${value.toInt()})",
+                                fontSize = 12.sp,
+                                color = Color.DarkGray
+                            )
                         }
                     }
                 }
@@ -89,5 +99,6 @@ fun MiniCategoryChart(viewModel: CategoriesViewModel = viewModel()) {
         }
     }
 }
+
 
 
