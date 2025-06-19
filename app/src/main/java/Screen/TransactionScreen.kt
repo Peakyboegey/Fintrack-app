@@ -4,7 +4,9 @@ package Screen
 import android.annotation.SuppressLint
 import android.app.DatePickerDialog
 import android.app.TimePickerDialog
+import android.os.Build
 import android.widget.TimePicker
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
@@ -21,182 +23,125 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import java.text.SimpleDateFormat
 import java.util.*
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import com.google.android.gms.tasks.Tasks
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.QuerySnapshot
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 
+
+data class Transaction(
+    val amount: Double=0.2,
+    val date: String="",
+    val time: String="",
+    val notes: String="",
+    val category: String?= null,
+    val timestamp: com.google.firebase.Timestamp? = null,
+    val type: String=""
+)
+
+class TransactionViewModel : ViewModel(){
+    private val db= FirebaseFirestore.getInstance()
+
+    var transactions by mutableStateOf<List<Transaction>>(emptyList())
+        private set
+
+    init {
+        fetchAllTransactions()
+    }
+
+    private fun fetchAllTransactions(){
+        val spendingRef = db.collection("spending").orderBy("timestamp", Query.Direction.DESCENDING)
+        val incomeRef = db.collection("income").orderBy("timestamp", Query.Direction.DESCENDING)
+
+        val spendingTask = spendingRef.get()
+        val incomeTask = incomeRef.get()
+
+        Tasks.whenAllSuccess<QuerySnapshot>(spendingTask, incomeTask)
+            .addOnSuccessListener { results->
+                val allTransactions = mutableListOf<Transaction>()
+            }
+    }
+}
+
+fun groupTransactionsByDate(transactions: List<Transaction>): Map<LocalDate, List<Transaction>> {
+    return transactions.groupBy { it.date }
+}
+
+@RequiresApi(Build.VERSION_CODES.O)
 @SuppressLint("UnrememberedGetBackStackEntry")
 @Composable
-fun TransactionScreen(navController: NavController) {
-    // Ambil category dari savedStateHandle
-    val backStackEntry = remember {
-        navController.getBackStackEntry("transaction")
-    }
-    val categoryState = backStackEntry.savedStateHandle
-        .getStateFlow("selected_category", "Clothing")
-        .collectAsState()
-    val transactionTypes = listOf("Income", "Spending")
-    var selectedType by remember { mutableStateOf("Spending") }
-    val context = LocalContext.current
-    val calendar = Calendar.getInstance()
-    var selectedDate by remember { mutableStateOf(SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(calendar.time)) }
-    var selectedTime by remember { mutableStateOf(SimpleDateFormat("HH:mm", Locale.getDefault()).format(calendar.time)) }
-    var amount by remember { mutableStateOf("6500.00") }
-    val selectedCategory = categoryState.value
-    var notes by remember { mutableStateOf("") }
+fun TransactionScreen(transactions: List<Transaction>) {
+    val grouped = groupTransactionsByDate(transactions).toSortedMap(reverseOrder())
 
-    Column(
+    LazyColumn(
         modifier = Modifier
             .fillMaxSize()
             .padding(16.dp)
     ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Icon(Icons.Default.Close, contentDescription = "Close")
-            Spacer(modifier = Modifier.width(8.dp))
-            Text("Transaction", style = MaterialTheme.typography.titleLarge)
-        }
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            transactionTypes.forEach {
-                val isSelected = it == selectedType
-                Button(
-                    onClick = {
-                        selectedType = it
-
-                        when (it) {
-                            "Income" -> navController.navigate("income")
-                            "Spending" -> navController.navigate("spending")
-                        }
-                    },
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = if (isSelected) {
-                            when (it) {
-                                "Income" -> Color(0xFFB8E5B8)
-                                "Spending" -> Color(0xFFFFCCCC)
-                                else -> Color.LightGray
-                            }
-                        } else Color.White
-                    ),
-                    modifier = Modifier.weight(1f)
-                ) {
-                    Text(it, color = if (isSelected) Color.Black else Color.Gray)
-                }
-                Spacer(modifier = Modifier.width(8.dp))
+        grouped.forEach { (date, dailyTransactions) ->
+            item {
+                Text(
+                    text = date.format(DateTimeFormatter.ofPattern("dd MMM yyyy")),
+                    style = MaterialTheme.typography.titleMedium,
+                    modifier = Modifier.padding(vertical = 8.dp)
+                )
             }
-        }
 
-        Spacer(modifier = Modifier.height(20.dp))
-
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            OutlinedTextField(
-                value = selectedDate,
-                onValueChange = {},
-                readOnly = true,
-                modifier = Modifier
-                    .weight(1f)
-                    .clickable {
-                        DatePickerDialog(
-                            context,
-                            { _, year, month, day ->
-                                selectedDate = "%02d/%02d/%d".format(day, month + 1, year)
-                            },
-                            calendar.get(Calendar.YEAR),
-                            calendar.get(Calendar.MONTH),
-                            calendar.get(Calendar.DAY_OF_MONTH)
-                        ).show()
-                    },
-                label = { Text("Select Date") },
-                leadingIcon = {
-                    Icon(Icons.Default.DateRange, contentDescription = "Date")
-                }
-            )
-            Spacer(modifier = Modifier.width(16.dp))
-            OutlinedTextField(
-                value = selectedTime,
-                onValueChange = {},
-                readOnly = true,
-                modifier = Modifier
-                    .weight(1f)
-                    .clickable {
-                        TimePickerDialog(
-                            context,
-                            { _: TimePicker, hour: Int, minute: Int ->
-                                selectedTime = "%02d:%02d".format(hour, minute)
-                            },
-                            calendar.get(Calendar.HOUR_OF_DAY),
-                            calendar.get(Calendar.MINUTE),
-                            true
-                        ).show()
-                    },
-                label = { Text("Select Time") },
-                leadingIcon = {
-                    Icon(Icons.Default.AccessTime, contentDescription = "Time")
-                }
-            )
-        }
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        OutlinedTextField(
-            value = amount,
-            onValueChange = { amount = it },
-            label = { Text("Amount") },
-            leadingIcon = { Text("$", fontSize = 18.sp) },
-            modifier = Modifier.fillMaxWidth()
-        )
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        Text("Select Category", color = Color(0xFF1A73E8), fontWeight = FontWeight.Bold)
-        Spacer(modifier = Modifier.height(8.dp))
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clickable { navController.navigate("select_category") }
-                .padding(8.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Icon(Icons.Default.Checkroom, contentDescription = "Category", tint = Color.Red)
-            Spacer(modifier = Modifier.width(8.dp))
-            Text(selectedCategory)
-            Spacer(modifier = Modifier.weight(1f))
-            Icon(Icons.Default.KeyboardArrowRight, contentDescription = "Arrow")
-        }
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        OutlinedTextField(
-            value = notes,
-            onValueChange = { notes = it },
-            label = { Text("Notes") },
-            placeholder = { Text("Optional details") },
-            leadingIcon = {
-                Icon(Icons.Default.Description, contentDescription = "Notes")
-            },
-            modifier = Modifier.fillMaxWidth()
-        )
-
-        Spacer(modifier = Modifier.height(32.dp))
-
-        FloatingActionButton(
-            onClick = { /* Save action */ },
-            containerColor = Color(0xFFE0E0FF),
-            modifier = Modifier.align(Alignment.End)
-        ) {
-            Icon(Icons.Default.Check, contentDescription = "Submit")
+            items(dailyTransactions) { transaction ->
+                TransactionItem(transaction = transaction)
+            }
         }
     }
 }
 
+@Composable
+fun TransactionItem(transaction: Transaction) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+    ) {
+        Row(
+            modifier = Modifier
+                .padding(12.dp),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Column {
+                Text(text = transaction.title, style = MaterialTheme.typography.bodyLarge)
+                Text(
+                    text = transaction.type.name,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = if (transaction.type == TransactionType.INCOME) Color.Green else Color.Red
+                )
+            }
+            Text(
+                text = "Rp ${transaction.amount}",
+                style = MaterialTheme.typography.bodyLarge,
+                fontWeight = FontWeight.Bold
+            )
+        }
+    }
+}
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Preview(showBackground = true)
 @Composable
-fun PreviewTransactionScreen() {
-    val navController = rememberNavController()
-    TransactionScreen(navController = navController)
+fun TransactionScreenPreview() {
+    val sampleTransactions = listOf(
+        Transaction(1, "Gaji Bulanan", 5000000.0, TransactionType.INCOME, LocalDate.of(2025, 6, 18)),
+        Transaction(2, "Beli Kopi", 25000.0, TransactionType.SPENDING, LocalDate.of(2025, 6, 18)),
+        Transaction(3, "Beli Buku", 150000.0, TransactionType.SPENDING, LocalDate.of(2025, 6, 17)),
+        Transaction(4, "Freelance", 750000.0, TransactionType.INCOME, LocalDate.of(2025, 6, 17))
+    )
+
+    MaterialTheme {
+        TransactionScreen(sampleTransactions)
+    }
 }

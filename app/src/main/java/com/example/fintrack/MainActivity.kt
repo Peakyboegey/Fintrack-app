@@ -36,6 +36,7 @@ class MainActivity : ComponentActivity() {
         FirebaseApp.initializeApp(this)
 
         setContent {
+
             FintrackTheme {
                 val navController = rememberNavController()
 
