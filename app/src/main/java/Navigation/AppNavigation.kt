@@ -1,4 +1,10 @@
-package com.example.fintrack
+package Navigation
+import Screen.CategoryScreen
+import Screen.DashboardScreen
+import Screen.IncomeScreen
+import Screen.SpendingScreen
+import Screen.TransactionScreen
+import Screen.WelcomeScreen
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
