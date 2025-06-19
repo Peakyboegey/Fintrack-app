@@ -31,45 +31,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.compose.material.icons.filled.*
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.lifecycle.ViewModel
 import com.google.firebase.firestore.FirebaseFirestore
 import androidx.lifecycle.viewmodel.compose.viewModel
 
-class CategoryViewModel : ViewModel() {
-    private val _categories = mutableStateListOf<String>()
-    val categories: List<String> = _categories
-
-    private val db = FirebaseFirestore.getInstance()
-
-    init {
-        fetchCategories()
-    }
-
-    private fun fetchCategories() {
-        db.collection("categories")
-            .addSnapshotListener { snapshot, e ->
-                if (e != null || snapshot == null) return@addSnapshotListener
-                _categories.clear()
-                _categories.addAll(snapshot.mapNotNull { it.getString("name") })
-            }
-    }
-
-    fun addCategory(name: String) {
-        val trimmed = name.trim()
-        if (trimmed.isEmpty()) return
-
-        db.collection("categories")
-            .add(hashMapOf("name" to trimmed))
-            .addOnSuccessListener {
-                Log.d("Firestore", "Category added")
-            }
-            .addOnFailureListener {
-                Log.e("Firestore", "Failed to add category", it)
-            }
-    }
-}
 
 
 fun getCategoryIcon(category: String): ImageVector {
@@ -109,7 +74,7 @@ fun CategoryScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clickable {
-                        onCategorySelected(category)
+                        onCategorySelected(category) // ✅ Gunakan parameter
                     }
                     .padding(vertical = 12.dp),
                 verticalAlignment = Alignment.CenterVertically
