@@ -5,10 +5,13 @@ import Screen.CategoryScreen
 import Screen.DashboardScreen
 import Screen.IncomeScreen
 import Screen.SpendingScreen
+import Screen.TransactionScreen
 import Screen.WelcomeScreen
+import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
@@ -31,6 +34,7 @@ import com.google.firebase.FirebaseApp
 
 
 class MainActivity : ComponentActivity() {
+    @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         WindowCompat.setDecorFitsSystemWindows(window, false)
@@ -68,7 +72,7 @@ class MainActivity : ComponentActivity() {
                             BottomNavBar(
                                 navController = navController,
                                 onFabClick = {
-                                    navController.navigate("transaction")
+                                    navController.navigate("transactions")
                                 }
                             )
                         }
@@ -102,7 +106,9 @@ class MainActivity : ComponentActivity() {
                         composable("categories") {
                             CategoriesScreen(navController)
                         }
-
+                        composable("transaction"){
+                            TransactionScreen(navController)
+                        }
                     }
                 }
             }
