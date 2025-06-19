@@ -39,6 +39,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.rememberNavController
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ListenerRegistration
+import components.MiniCategoryChart
 import components.MonthYearPicker
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -211,7 +212,12 @@ fun DashboardScreen(navController: NavController, viewModel: DashboardViewModel 
                 Text("IDR %.2f".format(balance), fontSize = 20.sp, fontWeight = FontWeight.Bold)
             }
         }
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        MiniCategoryChart()
     }
+
 }
 
 fun monthName(month: Int): String {

@@ -41,11 +41,9 @@ class MainActivity : ComponentActivity() {
             FintrackTheme {
                 val navController = rememberNavController()
 
-                // Dapatkan rute saat ini untuk kontrol tampilan bottom bar
                 val currentBackStackEntry by navController.currentBackStackEntryAsState()
                 val currentRoute = currentBackStackEntry?.destination?.route
 
-                // Tentukan kapan BottomNavBar ditampilkan
                 val showBottomBar = currentRoute in listOf(
                     "dashboard", "home", "analysis", "transaction", "categories", "dashboard", "home", "analysis", "transaction", "categories", "income", "spending"
                 )
@@ -102,7 +100,7 @@ class MainActivity : ComponentActivity() {
                             }
                         }
                         composable("categories") {
-                            CategoriesScreen(navController) // <-- Ini yang menampilkan pie chart
+                            CategoriesScreen(navController)
                         }
 
                     }
