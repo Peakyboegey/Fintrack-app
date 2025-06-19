@@ -87,8 +87,60 @@ class TransactionViewModel : ViewModel() {
             .addOnFailureListener { e ->
                 Log.e("Firestore", "Failed to fetch transactions", e)
             }
+
+        }
+
+    fun deleteTransaction(transaction: Transaction) {
+        val collection = db.collection(transaction.type)
+        collection.document(transaction.documentId)
+            .delete()
+            .addOnSuccessListener {
+                transactions = transactions.filterNot { it.documentId == transaction.documentId }
+            }
+            .addOnFailureListener {
+                Log.e("Firestore", "Failed to delete document.", it)
+            }
     }
+
+    fun getTransactionById(
+        type: String,
+        id: String,
+        onResult: (Transaction?) -> Unit
+    )   {
+        db.collection(type).document(id).get()
+            .addOnSuccessListener { doc ->
+                val trx = doc.toObject(Transaction::class.java)?.copy(
+                    type = type,
+                    documentId = id
+                )
+                    onResult(trx)
+            }
+            .addOnFailureListener {
+                Log.e("Firestore", "Failed to edit transaction.", it)
+                onResult(null)
+            }
+
+    }
+
+    fun updateTransaction(transaction: Transaction) {
+        db.collection(transaction.type)
+            .document(transaction.documentId)
+            .update(
+                mapOf(
+                    "amount" to transaction.amount,
+                    "notes" to transaction.notes
+                )
+            )
+            .addOnSuccessListener {
+                fetchAllTransactions()
+            }
+            .addOnFailureListener {
+                Log.e("Firestore", "Update Transaction Failed", it)
+            }
+    }
+
 }
+
 
 
 @RequiresApi(Build.VERSION_CODES.O)
@@ -140,7 +192,13 @@ fun TransactionScreen(navController: NavHostController) {
                     }
 
                     items(dailyTransactions) { transaction ->
-                        TransactionCard(transaction = transaction)
+                        TransactionCard(
+                            transaction = transaction,
+                            onDeleteClick = {viewModel.deleteTransaction(it)},
+                            onEditClick = {
+                                navController.navigate("EditTransactionScreen/${it.type}/${it.documentId}")
+                            }
+                        )
                     }
                 }
             }
@@ -151,7 +209,9 @@ fun TransactionScreen(navController: NavHostController) {
 @Composable
 fun TransactionCard(
     transaction: Transaction,
-    onEditClick: (Transaction) -> Unit ={ }) {
+    onEditClick: (Transaction) -> Unit = {},
+    onDeleteClick: (Transaction) -> Unit ={}
+    ){
     val typeColor = if (transaction.type == "income") Color(0xFF4CAF50) else Color(0xFFF44336)
     val label = if (transaction.type == "income") "Income" else "Spending"
 
@@ -171,6 +231,15 @@ fun TransactionCard(
                     Text(text = label, color = typeColor, fontWeight = FontWeight.Bold)
                     transaction.category?.let {
                         Text(text = it, style = MaterialTheme.typography.bodySmall)
+                    }
+                }
+
+                Row{
+                    IconButton(onClick = {onEditClick(transaction)}) {
+                        Icon(Icons.Default.Edit, contentDescription = "Edit")
+                    }
+                    IconButton(onClick = {onDeleteClick(transaction)}) {
+                        Icon(Icons.Default.Delete, contentDescription = "Delete")
                     }
                 }
 
