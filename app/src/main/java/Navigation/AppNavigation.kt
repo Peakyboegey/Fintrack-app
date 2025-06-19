@@ -24,7 +24,6 @@ fun AppNavHost(navController: NavHostController, modifier: Modifier = Modifier) 
     ) {
         composable("welcome") { WelcomeScreen(navController) }
         composable("dashboard") { DashboardScreen(navController) }
-        composable("transaction") { TransactionScreen(navController) }
         composable("income") { IncomeScreen(navController) }
         composable("spending") { SpendingScreen(navController) }
         composable("select_category") {

@@ -1,52 +1,50 @@
 package Screen
 
-
-import android.annotation.SuppressLint
-import android.app.DatePickerDialog
-import android.app.TimePickerDialog
 import android.os.Build
-import android.widget.TimePicker
+import android.util.Log
 import androidx.annotation.RequiresApi
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.*
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.*
-import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
-import java.text.SimpleDateFormat
-import java.util.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.ui.unit.sp
+import androidx.lifecycle.ViewModel
 import com.google.android.gms.tasks.Tasks
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.QuerySnapshot
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavHostController
+import com.google.firebase.firestore.DocumentId
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 
 
 data class Transaction(
-    val amount: Double=0.2,
+    val amount: Double=0.0,
     val date: String="",
     val time: String="",
     val notes: String="",
     val category: String?= null,
     val timestamp: com.google.firebase.Timestamp? = null,
-    val type: String=""
+    val type: String="",
+    val documentId: String=""
 )
 
-class TransactionViewModel : ViewModel(){
-    private val db= FirebaseFirestore.getInstance()
+class TransactionViewModel : ViewModel() {
+    private val db = FirebaseFirestore.getInstance()
 
     var transactions by mutableStateOf<List<Transaction>>(emptyList())
         private set
@@ -55,7 +53,7 @@ class TransactionViewModel : ViewModel(){
         fetchAllTransactions()
     }
 
-    private fun fetchAllTransactions(){
+    private fun fetchAllTransactions() {
         val spendingRef = db.collection("spending").orderBy("timestamp", Query.Direction.DESCENDING)
         val incomeRef = db.collection("income").orderBy("timestamp", Query.Direction.DESCENDING)
 
@@ -63,85 +61,145 @@ class TransactionViewModel : ViewModel(){
         val incomeTask = incomeRef.get()
 
         Tasks.whenAllSuccess<QuerySnapshot>(spendingTask, incomeTask)
-            .addOnSuccessListener { results->
+            .addOnSuccessListener { results ->
                 val allTransactions = mutableListOf<Transaction>()
+
+                val spendingDocs = results[0] as QuerySnapshot
+                val incomeDocs = results[1] as QuerySnapshot
+
+                spendingDocs.documents.mapNotNullTo(allTransactions) { doc ->
+                    doc.toObject(Transaction::class.java)?.copy(
+                        type = "spending",
+                        documentId = doc.id
+                    )
+                }
+
+                incomeDocs.documents.mapNotNullTo(allTransactions) { doc ->
+                    doc.toObject(Transaction::class.java)?.copy(
+                        type = "income",
+                        documentId = doc.id
+                    )
+                }
+
+                // Sort by timestamp descending
+                transactions = allTransactions.sortedByDescending { it.timestamp }
+            }
+            .addOnFailureListener { e ->
+                Log.e("Firestore", "Failed to fetch transactions", e)
             }
     }
 }
 
-fun groupTransactionsByDate(transactions: List<Transaction>): Map<LocalDate, List<Transaction>> {
-    return transactions.groupBy { it.date }
-}
 
 @RequiresApi(Build.VERSION_CODES.O)
-@SuppressLint("UnrememberedGetBackStackEntry")
+fun groupTransactionsByDate(transactions: List<Transaction>): Map<String, List<Transaction>> {
+    return transactions.groupBy { it.date }
+        .toSortedMap(compareByDescending { dateStr ->
+            LocalDate.parse(dateStr, DateTimeFormatter.ofPattern("dd/MM/yyyy"))
+        })
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun TransactionScreen(transactions: List<Transaction>) {
-    val grouped = groupTransactionsByDate(transactions).toSortedMap(reverseOrder())
+fun TransactionScreen(navController: NavHostController) {
+    val viewModel: TransactionViewModel = viewModel()
+    val transactions = viewModel.transactions
 
-    LazyColumn(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp)
-    ) {
-        grouped.forEach { (date, dailyTransactions) ->
-            item {
-                Text(
-                    text = date.format(DateTimeFormatter.ofPattern("dd MMM yyyy")),
-                    style = MaterialTheme.typography.titleMedium,
-                    modifier = Modifier.padding(vertical = 8.dp)
-                )
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("Transaction") },
+            )
+        }
+    ) { padding ->
+        if (transactions.isEmpty()) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator()
             }
+        } else {
+            val grouped = groupTransactionsByDate(transactions)
 
-            items(dailyTransactions) { transaction ->
-                TransactionItem(transaction = transaction)
+            LazyColumn(
+                modifier = Modifier
+                    .padding(padding)
+                    .padding(16.dp)
+            ) {
+                grouped.forEach { (date, dailyTransactions) ->
+                    item {
+                        Text(
+                            text = date,
+                            style = MaterialTheme.typography.titleMedium,
+                            modifier = Modifier.padding(vertical = 8.dp)
+                        )
+                    }
+
+                    items(dailyTransactions) { transaction ->
+                        TransactionCard(transaction = transaction)
+                    }
+                }
             }
         }
     }
 }
 
 @Composable
-fun TransactionItem(transaction: Transaction) {
+fun TransactionCard(
+    transaction: Transaction,
+    onEditClick: (Transaction) -> Unit ={ }) {
+    val typeColor = if (transaction.type == "income") Color(0xFF4CAF50) else Color(0xFFF44336)
+    val label = if (transaction.type == "income") "Income" else "Spending"
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 4.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White)
     ) {
-        Row(
-            modifier = Modifier
-                .padding(12.dp),
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Column {
-                Text(text = transaction.title, style = MaterialTheme.typography.bodyLarge)
+        Column(modifier = Modifier.padding(12.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Column {
+                    Text(text = label, color = typeColor, fontWeight = FontWeight.Bold)
+                    transaction.category?.let {
+                        Text(text = it, style = MaterialTheme.typography.bodySmall)
+                    }
+                }
+
                 Text(
-                    text = transaction.type.name,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = if (transaction.type == TransactionType.INCOME) Color.Green else Color.Red
+                    text = "Rp ${transaction.amount}",
+                    fontWeight = FontWeight.Bold,
+                    color = Color.Black
                 )
             }
-            Text(
-                text = "Rp ${transaction.amount}",
-                style = MaterialTheme.typography.bodyLarge,
-                fontWeight = FontWeight.Bold
-            )
+
+            Spacer(modifier = Modifier.height(4.dp))
+            Row(
+                horizontalArrangement = Arrangement.SpaceBetween,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(text = transaction.notes, style = MaterialTheme.typography.bodySmall)
+                Text(text = transaction.time, style = MaterialTheme.typography.bodySmall)
+            }
         }
     }
 }
 
 @RequiresApi(Build.VERSION_CODES.O)
-@Preview(showBackground = true)
+@Preview(showBackground = true, widthDp = 360, heightDp = 640)
 @Composable
 fun TransactionScreenPreview() {
-    val sampleTransactions = listOf(
-        Transaction(1, "Gaji Bulanan", 5000000.0, TransactionType.INCOME, LocalDate.of(2025, 6, 18)),
-        Transaction(2, "Beli Kopi", 25000.0, TransactionType.SPENDING, LocalDate.of(2025, 6, 18)),
-        Transaction(3, "Beli Buku", 150000.0, TransactionType.SPENDING, LocalDate.of(2025, 6, 17)),
-        Transaction(4, "Freelance", 750000.0, TransactionType.INCOME, LocalDate.of(2025, 6, 17))
-    )
-
+    val navController = rememberNavController()
     MaterialTheme {
-        TransactionScreen(sampleTransactions)
+        TransactionScreen(navController = navController)
     }
 }
+
