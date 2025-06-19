@@ -39,13 +39,20 @@ import androidx.navigation.NavController
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import java.text.NumberFormat
+import java.util.Locale
 
 class CategoriesViewModel : ViewModel() {
     private val db = FirebaseFirestore.getInstance()
+
     private val _categoryTotals = MutableStateFlow<Map<String, Double>>(emptyMap())
     val categoryTotals: StateFlow<Map<String, Double>> = _categoryTotals
 
+    private val _incomeTotal = MutableStateFlow(0.0)
+    val incomeTotal: StateFlow<Double> = _incomeTotal
+
     init {
+        // Listen spending
         db.collection("spending")
             .addSnapshotListener { snap, e ->
                 if (e != null || snap == null) return@addSnapshotListener
@@ -59,22 +66,35 @@ class CategoriesViewModel : ViewModel() {
                     .fold(0.0) { acc, e -> acc + e.second }
                 _categoryTotals.value = totals
             }
+
+        // Listen income
+        db.collection("income")
+            .addSnapshotListener { snap, e ->
+                if (e != null || snap == null) return@addSnapshotListener
+                val totalIncome = snap.documents.sumOf {
+                    it.getDouble("amount") ?: 0.0
+                }
+                _incomeTotal.value = totalIncome
+            }
     }
 }
+
 
 @Composable
 fun CategoryPieChart(viewModel: CategoriesViewModel = viewModel()) {
     val categoryTotalsState = viewModel.categoryTotals.collectAsState()
     val categoryTotals = categoryTotalsState.value
-
-    val floatData = categoryTotals.mapValues { it.value.toFloat() }
+    val incomeTotalState = viewModel.incomeTotal.collectAsState()
+    val incomeTotal = incomeTotalState.value
+    val floatData: Map<String, Float> = categoryTotals.mapValues { it.value.toFloat() }
 
     if (floatData.isEmpty()) {
         Text("No data available")
     } else {
-        SimplePieChart(floatData)
+        SimplePieChart(data = floatData, incomeTotal = incomeTotal)
     }
 }
+
 
 @Composable
 fun CategoriesScreen(navController: NavController) {
@@ -90,7 +110,7 @@ fun CategoriesScreen(navController: NavController) {
 }
 
 @Composable
-fun SimplePieChart(data: Map<String, Float>) {
+fun SimplePieChart(data: Map<String, Float>, incomeTotal: Double) {
     val colors = listOf(
         Color(0xFFE57373), Color(0xFF64B5F6), Color(0xFF81C784),
         Color(0xFFFFD54F), Color(0xFFBA68C8), Color(0xFFFF8A65)
@@ -101,6 +121,9 @@ fun SimplePieChart(data: Map<String, Float>) {
         Text("No data to display", modifier = Modifier.padding(16.dp))
         return
     }
+
+    val formattedIncome = NumberFormat.getCurrencyInstance(Locale("in", "ID"))
+        .format(incomeTotal).replace("Rp", "Rp ")
 
     Card(
         modifier = Modifier
@@ -141,9 +164,20 @@ fun SimplePieChart(data: Map<String, Float>) {
                         startAngle += sweep
                     }
                 }
+
+                // ⬇️ Teks income di tengah chart
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text("Total Income", fontSize = 12.sp, color = Color.Gray)
+                    Text(
+                        formattedIncome,
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFF2E7D32)
+                    )
+                }
             }
 
-            // Legend + Progress bar
+            // Progress Bar tiap kategori (sama seperti sebelumnya)
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 data.entries.forEachIndexed { index, entry ->
                     val percent = entry.value / total
@@ -189,6 +223,7 @@ fun SimplePieChart(data: Map<String, Float>) {
         }
     }
 }
+
 
 
 
