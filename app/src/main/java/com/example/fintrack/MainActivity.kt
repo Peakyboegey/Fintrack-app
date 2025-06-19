@@ -1,5 +1,6 @@
 package com.example.fintrack
 
+import Screen.CategoriesScreen
 import Screen.CategoryScreen
 import Screen.DashboardScreen
 import Screen.IncomeScreen
@@ -98,6 +99,9 @@ class MainActivity : ComponentActivity() {
                                     ?.set("selected_category", selectedCategory)
                                 navController.popBackStack()
                             }
+                        }
+                        composable("categories") {
+                            CategoriesScreen(navController) // <-- Ini yang menampilkan pie chart
                         }
 
                     }
