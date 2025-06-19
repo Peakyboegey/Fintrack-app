@@ -76,8 +76,6 @@ fun CategoriesScreen(navController: NavController) {
     }
 }
 
-
-
 @Composable
 fun SimplePieChart(data: Map<String, Float>) {
     val colors = listOf(
@@ -130,6 +128,8 @@ fun SimplePieChart(data: Map<String, Float>) {
         }
     }
 }
+
+
 
 
 
