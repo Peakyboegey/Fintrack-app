@@ -24,8 +24,7 @@ fun BottomNavBar(
     onFabClick: () -> Unit
 ) {
     val items = listOf(
-        NavItem("dashboard", Icons.Default.Home, "Home"), // Home mengarah ke dashboard
-        NavItem("analysis", Icons.Default.Assessment, "Analysis"),
+        NavItem("dashboard", Icons.Default.Home, "Home"),
         NavItem("transaction", Icons.Default.List, "Transaction"),
         NavItem("categories", Icons.Default.Category, "Categories"),
     )
@@ -54,6 +53,7 @@ fun BottomNavBar(
         }
     }
 }
+
 
 data class NavItem(val route: String, val icon: ImageVector, val title: String)
 

@@ -14,8 +14,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.LinearProgressIndicator
@@ -122,20 +124,24 @@ fun SimplePieChart(data: Map<String, Float>, incomeTotal: Double) {
         return
     }
 
-    val formattedIncome = NumberFormat.getCurrencyInstance(Locale("in", "ID"))
-        .format(incomeTotal).replace("Rp", "Rp ")
+    val balance = incomeTotal - total
+    val formattedBalance = NumberFormat.getCurrencyInstance(Locale("in", "ID"))
+        .format(balance).replace("Rp", "Rp ")
+
+    val maxCategory = data.maxByOrNull { it.value }
 
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .wrapContentHeight(),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFFF9F9F9))
+        colors = CardDefaults.cardColors(containerColor = Color(0xFFF2F2F2))
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(20.dp),
+                .padding(20.dp)
+                .verticalScroll(rememberScrollState()), // ✅ scroll seluruh konten
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             Text(
@@ -144,6 +150,7 @@ fun SimplePieChart(data: Map<String, Float>, incomeTotal: Double) {
                 fontWeight = FontWeight.SemiBold
             )
 
+            // ✅ Donut Chart & Balance
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -165,19 +172,18 @@ fun SimplePieChart(data: Map<String, Float>, incomeTotal: Double) {
                     }
                 }
 
-                // ⬇️ Teks income di tengah chart
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text("Total Income", fontSize = 12.sp, color = Color.Gray)
+                    Text("Balance", fontSize = 12.sp, color = Color.Gray)
                     Text(
-                        formattedIncome,
+                        formattedBalance,
                         fontSize = 16.sp,
                         fontWeight = FontWeight.Bold,
-                        color = Color(0xFF2E7D32)
+                        color = if (balance >= 0) Color(0xFF2E7D32) else Color.Red
                     )
                 }
             }
 
-            // Progress Bar tiap kategori (sama seperti sebelumnya)
+            // ✅ Bar Chart
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 data.entries.forEachIndexed { index, entry ->
                     val percent = entry.value / total
@@ -220,10 +226,69 @@ fun SimplePieChart(data: Map<String, Float>, incomeTotal: Double) {
                     }
                 }
             }
+
+            val safeIncome = if (incomeTotal <= 0.0) 1.0 else incomeTotal
+            val balance = incomeTotal - total
+            val hasNegativeBalance = balance < 0
+            val mostSpent = data.maxByOrNull { it.value }
+            val riskyCategories = data.filter { it.value > 0.3f * safeIncome }
+
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp),
+                colors = CardDefaults.cardColors(containerColor = Color(0xFFFCE4EC))
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(20.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Text(
+                        text = "\uD83D\uDD0D Insight",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 14.sp,
+                        color = Color(0xFFD81B60)
+                    )
+
+                    if (hasNegativeBalance) {
+                        Text(
+                            text = "🔴 Your spending exceeds your income.",
+                            fontSize = 13.sp,
+                            color = Color(0xFFB71C1C)
+                        )
+                    }
+
+                    mostSpent?.let {
+                        val percent = (it.value / safeIncome) * 100
+                        Text(
+                            text = "🥇 Most spending goes to ${it.key} (${percent.toInt()}% of your income).",
+                            fontSize = 13.sp,
+                            color = Color(0xFF4A148C)
+                        )
+                    }
+
+                    riskyCategories.forEach {
+                        val percent = (it.value / safeIncome) * 100
+                        Text(
+                            text = "⚠️ Spending on ${it.key} is high: ${percent.toInt()}% of your income.",
+                            fontSize = 13.sp,
+                            color = Color(0xFF6A1B9A)
+                        )
+                    }
+
+                    if (!hasNegativeBalance && riskyCategories.isEmpty()) {
+                        Text(
+                            text = "✅ Your spending is within safe limits. Good job!",
+                            fontSize = 13.sp,
+                            color = Color(0xFF2E7D32)
+                        )
+                    }
+                }
+            }
         }
     }
 }
-
 
 
 

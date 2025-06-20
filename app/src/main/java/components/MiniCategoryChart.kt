@@ -15,6 +15,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -26,71 +28,84 @@ fun MiniCategoryChart(viewModel: CategoriesViewModel = viewModel()) {
     val floatData = categoryTotals.mapValues { it.value.toFloat() }
 
     if (floatData.isEmpty()) {
-        Text("No spending data", style = MaterialTheme.typography.bodySmall)
+        Text(
+            "No spending data",
+            style = MaterialTheme.typography.bodySmall,
+            color = Color.Gray,
+            modifier = Modifier.padding(16.dp)
+        )
     } else {
         val colors = listOf(
-            Color(0xFFE57373), Color(0xFF64B5F6), Color(0xFF81C784),
-            Color(0xFFFFD54F), Color(0xFFBA68C8), Color(0xFFFF8A65)
+            Color(0xFFEF9A9A), Color(0xFF90CAF9), Color(0xFFA5D6A7),
+            Color(0xFFFFF59D), Color(0xFFCE93D8), Color(0xFFFFCCBC)
         )
 
         val total = floatData.values.sum()
-        var startAngle = 0f
+        var startAngle = -90f
 
         Card(
             modifier = Modifier
                 .fillMaxWidth()
                 .wrapContentHeight(),
-            shape = RoundedCornerShape(12.dp),
-            colors = CardDefaults.cardColors(containerColor = Color(0xFFF9F9F9))
+            shape = RoundedCornerShape(16.dp),
+            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+            colors = CardDefaults.cardColors(containerColor = Color(0xFFF1F1F1))
         ) {
             Column(
-                modifier = Modifier.padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 Text(
-                    text = "Spending by Category",
+                    "Spending by Category",
                     style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.SemiBold
+                    fontWeight = FontWeight.Medium
                 )
 
-                // Pie Chart
+                // Donut Chart
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(120.dp),
+                        .height(100.dp),
                     contentAlignment = Alignment.Center
                 ) {
-                    Canvas(modifier = Modifier.size(100.dp)) {
+                    Canvas(modifier = Modifier.size(80.dp)) {
                         floatData.entries.forEachIndexed { index, entry ->
                             val sweep = 360f * (entry.value / total)
                             drawArc(
                                 color = colors[index % colors.size],
                                 startAngle = startAngle,
                                 sweepAngle = sweep,
-                                useCenter = true
+                                useCenter = false,
+                                style = Stroke(width = 20f, cap = StrokeCap.Round)
                             )
                             startAngle += sweep
                         }
                     }
                 }
 
-                // Legend
-                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                    floatData.entries.forEachIndexed { index, (category, value) ->
+                // Horizontal Legend
+                LazyRow(
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    items(floatData.entries.toList()) { (category, value) ->
                         Row(
-                            verticalAlignment = Alignment.CenterVertically
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.padding(end = 4.dp)
                         ) {
                             Box(
                                 modifier = Modifier
-                                    .size(10.dp)
+                                    .size(8.dp)
                                     .clip(CircleShape)
-                                    .background(colors[index % colors.size])
+                                    .background(colors[category.hashCode() % colors.size])
                             )
-                            Spacer(modifier = Modifier.width(8.dp))
+                            Spacer(modifier = Modifier.width(4.dp))
                             Text(
                                 text = "$category (${value.toInt()})",
                                 fontSize = 12.sp,
-                                color = Color.DarkGray
+                                color = Color(0xFF4A4A4A)
                             )
                         }
                     }
@@ -99,6 +114,7 @@ fun MiniCategoryChart(viewModel: CategoriesViewModel = viewModel()) {
         }
     }
 }
+
 
 
 
