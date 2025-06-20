@@ -183,16 +183,24 @@ fun SimplePieChart(data: Map<String, Float>, incomeTotal: Double) {
                 }
             }
 
-            // ✅ Bar Chart
-            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            val currencyFormat = NumberFormat.getCurrencyInstance(Locale("in", "ID"))
+
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 data.entries.forEachIndexed { index, entry ->
                     val percent = entry.value / total
-                    Column {
+                    val formattedAmount = currencyFormat.format(entry.value).replace("Rp", "Rp ")
+
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 4.dp)
+                    ) {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.SpaceBetween,
                             modifier = Modifier.fillMaxWidth()
                         ) {
+                            // ⬅️ Kategori dan Warna
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 Box(
                                     modifier = Modifier
@@ -207,13 +215,24 @@ fun SimplePieChart(data: Map<String, Float>, incomeTotal: Double) {
                                     fontWeight = FontWeight.Medium
                                 )
                             }
-                            Text(
-                                text = "${(percent * 100).toInt()}%",
-                                fontSize = 12.sp,
-                                color = Color.Gray
-                            )
+
+                            // ➡️ Jumlah dan Persen
+                            Column(horizontalAlignment = Alignment.End) {
+                                Text(
+                                    text = formattedAmount,
+                                    fontSize = 12.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = Color.DarkGray
+                                )
+                                Text(
+                                    text = "${(percent * 100).toInt()}%",
+                                    fontSize = 11.sp,
+                                    color = Color.Gray
+                                )
+                            }
                         }
 
+                        // Bar indikator
                         LinearProgressIndicator(
                             progress = percent,
                             color = colors[index % colors.size],
@@ -226,6 +245,7 @@ fun SimplePieChart(data: Map<String, Float>, incomeTotal: Double) {
                     }
                 }
             }
+
 
             val safeIncome = if (incomeTotal <= 0.0) 1.0 else incomeTotal
             val balance = incomeTotal - total
