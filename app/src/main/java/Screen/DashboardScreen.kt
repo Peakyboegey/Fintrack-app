@@ -15,6 +15,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material.icons.filled.ArrowDropUp
 import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Card
@@ -25,10 +27,12 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.navigation.NavController
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -46,8 +50,10 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
+import java.text.NumberFormat
 import java.util.Calendar
 import java.util.Date
+import java.util.Locale
 
 class DashboardViewModel : ViewModel() {
     private val db = FirebaseFirestore.getInstance()
@@ -126,26 +132,27 @@ fun DashboardScreen(navController: NavController, viewModel: DashboardViewModel 
     val totalSpending by viewModel.totalSpending.collectAsState()
     val balance by viewModel.balance.collectAsState()
     val selectedMonthYear by viewModel.selectedMonthYear.collectAsState()
-
+    val rupiahFormat = remember { NumberFormat.getCurrencyInstance(Locale("in", "ID")) }
 
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color.White)
+            .background(Color(0xFFFDFDFD))
             .padding(16.dp)
     ) {
-        // Header
+        // ✅ Header
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Text("Home", style = MaterialTheme.typography.titleMedium)
-            Icon(Icons.Default.Settings, contentDescription = "Settings", modifier = Modifier.size(24.dp))
+            Text("📊 Dashboard", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+            Icon(Icons.Default.Settings, contentDescription = "Settings", tint = Color.Gray)
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(20.dp))
 
-        // Bulan dan navigasi
+        // ✅ Bulan
         Row(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
@@ -171,54 +178,96 @@ fun DashboardScreen(navController: NavController, viewModel: DashboardViewModel 
 
         Spacer(modifier = Modifier.height(20.dp))
 
-        // Kartu ringkasan
+        // ✅ Ringkasan
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            Card(
-                modifier = Modifier.weight(1f),
-                colors = CardDefaults.cardColors(containerColor = Color(0xFFEAF7EA)),
-                shape = RoundedCornerShape(12.dp)
-            ) {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    Text("Income", fontWeight = FontWeight.Bold)
-                    Text("IDR %.2f".format(totalIncome), fontSize = 20.sp, fontWeight = FontWeight.Bold)
-                }
-            }
+            SummaryCard(
+                title = "Income",
+                amount = rupiahFormat.format(totalIncome).replace("Rp", "Rp "),
+                backgroundColor = Color(0xFFD0F0C0),
+                icon = Icons.Default.ArrowDropUp,
+                iconColor = Color(0xFF2E7D32),
+                modifier = Modifier.weight(1f) // ✅ Tambahkan ini
+            )
 
-            Card(
-                modifier = Modifier.weight(1f),
-                colors = CardDefaults.cardColors(containerColor = Color(0xFFFCE8E8)),
-                shape = RoundedCornerShape(12.dp)
-            ) {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    Text("Spending", fontWeight = FontWeight.Bold)
-                    Text("IDR %.2f".format(totalSpending), fontSize = 20.sp, fontWeight = FontWeight.Bold)
-                }
-            }
+            SummaryCard(
+                title = "Spending",
+                amount = rupiahFormat.format(totalSpending).replace("Rp", "Rp "),
+                backgroundColor = Color(0xFFFFE0E0),
+                icon = Icons.Default.ArrowDropDown,
+                iconColor = Color(0xFFD32F2F),
+                modifier = Modifier.weight(1f) // ✅ Tambahkan ini juga
+            )
+
         }
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        // Balance
+        // ✅ Balance Card
         Card(
             colors = CardDefaults.cardColors(containerColor = Color(0xFFDEEAFE)),
             shape = RoundedCornerShape(12.dp),
             modifier = Modifier.fillMaxWidth()
         ) {
-            Column(modifier = Modifier.padding(16.dp)) {
+            Column(
+                modifier = Modifier.padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(6.dp)
+            ) {
                 Text("Balance", fontWeight = FontWeight.Bold)
-                Text("IDR %.2f".format(balance), fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                Text(
+                    rupiahFormat.format(balance).replace("Rp", "Rp "),
+                    fontSize = 22.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = if (balance >= 0) Color(0xFF2E7D32) else Color(0xFFD32F2F)
+                )
             }
         }
 
-        Spacer(modifier = Modifier.height(12.dp))
+        Spacer(modifier = Modifier.height(20.dp))
 
+        // ✅ Mini Pie Chart / Category Breakdown
         MiniCategoryChart()
     }
-
 }
+
+@Composable
+fun SummaryCard(
+    title: String,
+    amount: String,
+    backgroundColor: Color,
+    icon: ImageVector,
+    iconColor: Color,
+    modifier: Modifier = Modifier // Tambahkan ini agar bisa dikontrol dari luar
+) {
+    Card(
+        modifier = modifier, // ✅ Gunakan modifier dari parameter
+        colors = CardDefaults.cardColors(containerColor = backgroundColor),
+        shape = RoundedCornerShape(12.dp)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column {
+                Text(title, fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
+                Text(amount, fontSize = 16.sp, fontWeight = FontWeight.Bold)
+            }
+            Icon(
+                icon,
+                contentDescription = null,
+                tint = iconColor,
+                modifier = Modifier.size(28.dp)
+            )
+        }
+    }
+}
+
+
 
 fun monthName(month: Int): String {
     return listOf(
