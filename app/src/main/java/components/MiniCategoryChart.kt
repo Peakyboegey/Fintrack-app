@@ -29,91 +29,108 @@ fun MiniCategoryChart(viewModel: CategoriesViewModel = viewModel()) {
 
     if (floatData.isEmpty()) {
         Text(
-            "No spending data",
+            "Tidak ada data pengeluaran",
             style = MaterialTheme.typography.bodySmall,
             color = Color.Gray,
             modifier = Modifier.padding(16.dp)
         )
-    } else {
-        val colors = listOf(
-            Color(0xFFEF9A9A), Color(0xFF90CAF9), Color(0xFFA5D6A7),
-            Color(0xFFFFF59D), Color(0xFFCE93D8), Color(0xFFFFCCBC)
-        )
+        return
+    }
 
-        val total = floatData.values.sum()
-        var startAngle = -90f
+    val categoryColors = listOf(
+        Color(0xFFEF5350), // Merah
+        Color(0xFF42A5F5), // Biru
+        Color(0xFF66BB6A), // Hijau
+        Color(0xFFFFA726), // Oranye
+        Color(0xFFAB47BC), // Ungu
+        Color(0xFFFFD54F), // Kuning
+        Color(0xFF26A69A), // Teal
+        Color(0xFF8D6E63)  // Cokelat
+    )
 
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .wrapContentHeight(),
-            shape = RoundedCornerShape(16.dp),
-            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
-            colors = CardDefaults.cardColors(containerColor = Color(0xFFF1F1F1))
+    val total = floatData.values.sum()
+    var startAngle = -90f
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .wrapContentHeight(),
+        shape = RoundedCornerShape(16.dp),
+        elevation = CardDefaults.cardElevation(4.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White)
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            Column(
+            Text(
+                "Pengeluaran per Kategori",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold
+            )
+
+            // Donut chart
+            Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+                    .height(120.dp),
+                contentAlignment = Alignment.Center
             ) {
-                Text(
-                    "Spending by Category",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Medium
-                )
-
-                // Donut Chart
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(100.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Canvas(modifier = Modifier.size(80.dp)) {
-                        floatData.entries.forEachIndexed { index, entry ->
-                            val sweep = 360f * (entry.value / total)
-                            drawArc(
-                                color = colors[index % colors.size],
-                                startAngle = startAngle,
-                                sweepAngle = sweep,
-                                useCenter = false,
-                                style = Stroke(width = 20f, cap = StrokeCap.Round)
-                            )
-                            startAngle += sweep
-                        }
+                Canvas(modifier = Modifier.size(100.dp)) {
+                    floatData.entries.forEachIndexed { index, entry ->
+                        val sweep = 360f * (entry.value / total)
+                        drawArc(
+                            color = categoryColors[index % categoryColors.size],
+                            startAngle = startAngle,
+                            sweepAngle = sweep,
+                            useCenter = false,
+                            style = Stroke(width = 24f, cap = StrokeCap.Round)
+                        )
+                        startAngle += sweep
                     }
                 }
+            }
 
-                // Horizontal Legend
-                LazyRow(
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    items(floatData.entries.toList()) { (category, value) ->
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.padding(end = 4.dp)
-                        ) {
+            Divider()
+
+            // Legend (kategori dan nominal)
+            Column(
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                floatData.entries.forEachIndexed { index, entry ->
+                    val color = categoryColors[index % categoryColors.size]
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
                             Box(
                                 modifier = Modifier
-                                    .size(8.dp)
+                                    .size(10.dp)
                                     .clip(CircleShape)
-                                    .background(colors[category.hashCode() % colors.size])
+                                    .background(color)
                             )
-                            Spacer(modifier = Modifier.width(4.dp))
+                            Spacer(modifier = Modifier.width(8.dp))
                             Text(
-                                text = "$category (${value.toInt()})",
-                                fontSize = 12.sp,
-                                color = Color(0xFF4A4A4A)
+                                text = entry.key,
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.Medium
                             )
                         }
+                        Text(
+                            text = "Rp ${entry.value.toInt()}",
+                            fontSize = 13.sp,
+                            color = Color.DarkGray
+                        )
                     }
                 }
             }
         }
     }
 }
+
 
 
 

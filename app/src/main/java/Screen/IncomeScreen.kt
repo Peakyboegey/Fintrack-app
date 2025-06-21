@@ -5,6 +5,7 @@ import android.app.TimePickerDialog
 import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -15,8 +16,11 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccessTime
+import androidx.compose.material.icons.filled.AttachMoney
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Description
@@ -27,6 +31,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -34,8 +39,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -83,54 +91,55 @@ fun IncomeScreen(navController: NavController) {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(16.dp)
+            .padding(20.dp)
     ) {
-        Text("Income", style = MaterialTheme.typography.titleLarge)
+        Text(
+            text = "Add Income",
+            style = MaterialTheme.typography.headlineSmall,
+            fontWeight = FontWeight.Bold
+        )
 
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Modern Toggle Buttons
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(vertical = 8.dp),
+                .clip(RoundedCornerShape(12.dp))
+                .background(Color(0xFFF0F0F0)),
             horizontalArrangement = Arrangement.SpaceEvenly
         ) {
             transactionTypes.forEach {
                 val isSelected = it == selectedType
-                Button(
+                TextButton(
                     onClick = {
                         selectedType = it
-                        if (it == "Spending") {
-                            navController.navigate("spending") // navigasi ke SpendingScreen
-                        }
+                        if (it == "Spending") navController.navigate("spending")
                     },
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = if (isSelected) {
-                            when (it) {
-                                "Income" -> Color.White
-                                "Spending" -> Color(0xFFFFCCCC)
-                                else -> Color.LightGray
-                            }
-                        } else Color.Transparent
-                    ),
-                    border = BorderStroke(1.dp, Color.LightGray),
-                    modifier = Modifier
-                        .weight(1f)
-                        .padding(horizontal = 4.dp)
+                    modifier = Modifier.weight(1f)
                 ) {
-                    Text(it, color = if (isSelected) Color.Black else Color.Gray)
+                    Text(
+                        text = it,
+                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                        color = if (isSelected) MaterialTheme.colorScheme.primary else Color.Gray
+                    )
                 }
             }
         }
 
-        Spacer(modifier = Modifier.height(20.dp))
+        Spacer(modifier = Modifier.height(24.dp))
 
+        // Date & Time Pickers
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween
+            horizontalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             OutlinedTextField(
                 value = selectedDate,
                 onValueChange = {},
                 readOnly = true,
+                label = { Text("Date") },
+                leadingIcon = { Icon(Icons.Default.DateRange, contentDescription = null) },
                 modifier = Modifier
                     .weight(1f)
                     .clickable {
@@ -143,17 +152,15 @@ fun IncomeScreen(navController: NavController) {
                             calendar.get(Calendar.MONTH),
                             calendar.get(Calendar.DAY_OF_MONTH)
                         ).show()
-                    },
-                label = { Text("Select Date") },
-                leadingIcon = { Icon(Icons.Default.DateRange, contentDescription = "Date") }
+                    }
             )
-
-            Spacer(modifier = Modifier.width(16.dp))
 
             OutlinedTextField(
                 value = selectedTime,
                 onValueChange = {},
                 readOnly = true,
+                label = { Text("Time") },
+                leadingIcon = { Icon(Icons.Default.AccessTime, contentDescription = null) },
                 modifier = Modifier
                     .weight(1f)
                     .clickable {
@@ -166,49 +173,58 @@ fun IncomeScreen(navController: NavController) {
                             calendar.get(Calendar.MINUTE),
                             true
                         ).show()
-                    },
-                label = { Text("Select Time") },
-                leadingIcon = { Icon(Icons.Default.AccessTime, contentDescription = "Time") }
+                    }
             )
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(24.dp))
 
+        // Amount Input
         OutlinedTextField(
             value = amount,
             onValueChange = { amount = it },
             label = { Text("Amount") },
-            leadingIcon = { Text("$", fontSize = 18.sp) },
+            leadingIcon = {
+                Icon(Icons.Default.AttachMoney, contentDescription = null)
+            },
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
             modifier = Modifier.fillMaxWidth()
         )
 
         Spacer(modifier = Modifier.height(16.dp))
 
+        // Notes Input
         OutlinedTextField(
             value = notes,
             onValueChange = { notes = it },
             label = { Text("Notes") },
-            placeholder = { Text("Optional details") },
-            leadingIcon = { Icon(Icons.Default.Description, contentDescription = "Notes") },
+            leadingIcon = { Icon(Icons.Default.Description, contentDescription = null) },
+            placeholder = { Text("e.g. Salary, Bonus, etc.") },
             modifier = Modifier.fillMaxWidth()
         )
 
         Spacer(modifier = Modifier.height(32.dp))
 
-        FloatingActionButton(
+        // Save Button
+        Button(
             onClick = {
                 saveIncomeToFirestore(selectedDate, selectedTime, amount, notes)
-                Toast.makeText(context, "Income Saved", Toast.LENGTH_SHORT).show()
-                // Optional: navigate back to dashboard
+                Toast.makeText(context, "Income saved", Toast.LENGTH_SHORT).show()
                 navController.navigate("dashboard")
             },
-            containerColor = Color(0xFFB8E5B8),
-            modifier = Modifier.align(Alignment.End)
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(52.dp),
+            shape = RoundedCornerShape(12.dp),
+            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4CAF50))
         ) {
-            Icon(Icons.Default.Check, contentDescription = "Submit")
+            Icon(Icons.Default.Check, contentDescription = "Save", tint = Color.White)
+            Spacer(modifier = Modifier.width(8.dp))
+            Text("Save", color = Color.White)
         }
     }
 }
+
 
 @Preview(showBackground = true)
 @Composable

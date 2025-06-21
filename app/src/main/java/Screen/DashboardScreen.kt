@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -54,6 +55,9 @@ import java.text.NumberFormat
 import java.util.Calendar
 import java.util.Date
 import java.util.Locale
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+
 
 class DashboardViewModel : ViewModel() {
     private val db = FirebaseFirestore.getInstance()
@@ -133,10 +137,13 @@ fun DashboardScreen(navController: NavController, viewModel: DashboardViewModel 
     val balance by viewModel.balance.collectAsState()
     val selectedMonthYear by viewModel.selectedMonthYear.collectAsState()
     val rupiahFormat = remember { NumberFormat.getCurrencyInstance(Locale("in", "ID")) }
+    val transactionViewModel: TransactionViewModel = viewModel()
+    val transactions = transactionViewModel.transactions.take(5)
 
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .verticalScroll(rememberScrollState())
             .background(Color(0xFFFDFDFD))
             .padding(16.dp)
     ) {
@@ -146,7 +153,7 @@ fun DashboardScreen(navController: NavController, viewModel: DashboardViewModel 
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text("📊 Dashboard", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+            Text("Dashboard", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
             Icon(Icons.Default.Settings, contentDescription = "Settings", tint = Color.Gray)
         }
 
@@ -184,21 +191,21 @@ fun DashboardScreen(navController: NavController, viewModel: DashboardViewModel 
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             SummaryCard(
-                title = "Income",
+                title = "💰 Income",
                 amount = rupiahFormat.format(totalIncome).replace("Rp", "Rp "),
                 backgroundColor = Color(0xFFD0F0C0),
                 icon = Icons.Default.ArrowDropUp,
                 iconColor = Color(0xFF2E7D32),
-                modifier = Modifier.weight(1f) // ✅ Tambahkan ini
+                modifier = Modifier.weight(1f)
             )
 
             SummaryCard(
-                title = "Spending",
+                title = "🛍️ Spending",
                 amount = rupiahFormat.format(totalSpending).replace("Rp", "Rp "),
                 backgroundColor = Color(0xFFFFE0E0),
                 icon = Icons.Default.ArrowDropDown,
                 iconColor = Color(0xFFD32F2F),
-                modifier = Modifier.weight(1f) // ✅ Tambahkan ini juga
+                modifier = Modifier.weight(1f)
             )
 
         }
@@ -215,7 +222,7 @@ fun DashboardScreen(navController: NavController, viewModel: DashboardViewModel 
                 modifier = Modifier.padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(6.dp)
             ) {
-                Text("Balance", fontWeight = FontWeight.Bold)
+                Text("🧾 Balance", fontWeight = FontWeight.Bold)
                 Text(
                     rupiahFormat.format(balance).replace("Rp", "Rp "),
                     fontSize = 22.sp,
@@ -229,6 +236,51 @@ fun DashboardScreen(navController: NavController, viewModel: DashboardViewModel 
 
         // ✅ Mini Pie Chart / Category Breakdown
         MiniCategoryChart()
+
+        Spacer(modifier = Modifier.height(20.dp))
+
+        Text(
+            text = "Recent Transactions",
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.SemiBold
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            transactions.forEach { transaction ->
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(Color(0xFFF5F5F5), RoundedCornerShape(8.dp))
+                        .padding(12.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column {
+                        Text(
+                            text = transaction.category ?: "No Category",
+                            fontWeight = FontWeight.Medium
+                        )
+                        Text(
+                            text = if (transaction.type == "income") "Income" else "Spending",
+                            fontSize = 12.sp,
+                            color = if (transaction.type == "income") Color(0xFF2E7D32) else Color(0xFFD32F2F)
+                        )
+                    }
+                    Text(
+                        text = "Rp ${transaction.amount.toInt()}",
+                        fontWeight = FontWeight.Bold,
+                        color = if (transaction.type == "income") Color(0xFF2E7D32) else Color(0xFFD32F2F)
+                    )
+                }
+            }
+
+            if (transactions.isEmpty()) {
+                Text("No transactions yet.", color = Color.Gray, fontSize = 13.sp)
+            }
+        }
+
     }
 }
 
