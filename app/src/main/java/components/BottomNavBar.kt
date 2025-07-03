@@ -27,6 +27,7 @@ fun BottomNavBar(
         NavItem("dashboard", Icons.Default.Home, "Home"),
         NavItem("transaction", Icons.Default.List, "Transaction"),
         NavItem("categories", Icons.Default.Category, "Categories"),
+        NavItem("budgeting", Icons.Default.PieChart, "Budget")
     )
 
     val currentBackStackEntry by navController.currentBackStackEntryAsState()

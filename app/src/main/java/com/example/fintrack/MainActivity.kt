@@ -1,8 +1,10 @@
 package com.example.fintrack
 
+import Screen.BudgetScreen
 import Screen.CategoriesScreen
 import Screen.CategoryScreen
 import Screen.DashboardScreen
+import Screen.EditTransactionScreen
 import Screen.IncomeScreen
 import Screen.SpendingScreen
 import Screen.TransactionScreen
@@ -30,6 +32,8 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import components.BottomNavBar
 import androidx.compose.runtime.getValue
+import androidx.navigation.NavType
+import androidx.navigation.navArgument
 import com.google.firebase.FirebaseApp
 
 
@@ -49,7 +53,7 @@ class MainActivity : ComponentActivity() {
                 val currentRoute = currentBackStackEntry?.destination?.route
 
                 val showBottomBar = currentRoute in listOf(
-                    "dashboard", "home", "analysis", "transaction", "categories", "dashboard", "home", "analysis", "transaction", "categories", "income", "spending"
+                    "dashboard", "home", "analysis", "transaction", "categories", "income", "spending", "budgeting"
                 )
 
                 Scaffold(
@@ -109,6 +113,22 @@ class MainActivity : ComponentActivity() {
                         composable("transaction"){
                             TransactionScreen(navController)
                         }
+                        composable(
+                            "EditTransactionScreen/{type}/{id}",
+                            arguments = listOf(
+                                navArgument("type") { type = NavType.StringType },
+                                navArgument("id") { type = NavType.StringType }
+                            )
+                        ) { backStackEntry ->
+                            val type = backStackEntry.arguments?.getString("type") ?: ""
+                            val id = backStackEntry.arguments?.getString("id") ?: ""
+                            EditTransactionScreen(navController, type, id)
+                        }
+
+                        composable("budgeting") {
+                            BudgetScreen() //
+                        }
+
                     }
                 }
             }

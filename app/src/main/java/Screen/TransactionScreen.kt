@@ -102,42 +102,38 @@ class TransactionViewModel : ViewModel() {
             }
     }
 
-    fun getTransactionById(
-        type: String,
-        id: String,
-        onResult: (Transaction?) -> Unit
-    )   {
+    fun getTransactionById(type: String, id: String, onResult: (Transaction?) -> Unit) {
         db.collection(type).document(id).get()
             .addOnSuccessListener { doc ->
                 val trx = doc.toObject(Transaction::class.java)?.copy(
                     type = type,
                     documentId = id
                 )
-                    onResult(trx)
+                onResult(trx)
             }
             .addOnFailureListener {
-                Log.e("Firestore", "Failed to edit transaction.", it)
+                Log.e("Firestore", "Failed to get transaction", it)
                 onResult(null)
             }
-
     }
 
     fun updateTransaction(transaction: Transaction) {
-        db.collection(transaction.type)
-            .document(transaction.documentId)
+        db.collection(transaction.type).document(transaction.documentId)
             .update(
                 mapOf(
                     "amount" to transaction.amount,
-                    "notes" to transaction.notes
+                    "notes" to transaction.notes,
+                    "category" to transaction.category
                 )
             )
             .addOnSuccessListener {
                 fetchAllTransactions()
             }
             .addOnFailureListener {
-                Log.e("Firestore", "Update Transaction Failed", it)
+                Log.e("Firestore", "Update failed", it)
             }
     }
+
 
 }
 

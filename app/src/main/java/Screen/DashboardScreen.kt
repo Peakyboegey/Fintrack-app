@@ -55,8 +55,9 @@ import java.text.NumberFormat
 import java.util.Calendar
 import java.util.Date
 import java.util.Locale
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import kotlin.Pair
+import components.BudgetCard
 
 
 class DashboardViewModel : ViewModel() {
@@ -68,8 +69,15 @@ class DashboardViewModel : ViewModel() {
     private val _totalSpending = MutableStateFlow(0.0)
     val totalSpending: StateFlow<Double> = _totalSpending
 
-    private val _selectedMonthYear = MutableStateFlow(Pair(6, 2025))
+    private fun currentMonthYear(): Pair<Int, Int> {
+        val now = Calendar.getInstance()
+        return Pair(now.get(Calendar.MONTH) + 1, now.get(Calendar.YEAR))
+    }
+
+    private val _selectedMonthYear = MutableStateFlow(currentMonthYear())
     val selectedMonthYear: StateFlow<Pair<Int, Int>> = _selectedMonthYear
+
+
 
     val balance: StateFlow<Double> = combine(_totalIncome, _totalSpending) { income, spending ->
         income - spending
@@ -90,7 +98,6 @@ class DashboardViewModel : ViewModel() {
     private fun fetchDataForMonth() {
         val (month, year) = _selectedMonthYear.value
 
-        // Stop previous listeners
         incomeListener?.remove()
         spendingListener?.remove()
 
@@ -98,7 +105,7 @@ class DashboardViewModel : ViewModel() {
             .addSnapshotListener { snapshot, e ->
                 if (e != null || snapshot == null) return@addSnapshotListener
                 val total = snapshot.sumOf {
-                    val ts = it.getTimestamp("timestamp")?.toDate()
+                    val ts = it.getDate("timestamp") // ✅ lebih stabil
                     val amount = it.getDouble("amount") ?: 0.0
                     if (ts != null && isInMonth(ts, month, year)) amount else 0.0
                 }
@@ -109,13 +116,14 @@ class DashboardViewModel : ViewModel() {
             .addSnapshotListener { snapshot, e ->
                 if (e != null || snapshot == null) return@addSnapshotListener
                 val total = snapshot.sumOf {
-                    val ts = it.getTimestamp("timestamp")?.toDate()
+                    val ts = it.getDate("timestamp") // ✅ ganti ini juga
                     val amount = it.getDouble("amount") ?: 0.0
                     if (ts != null && isInMonth(ts, month, year)) amount else 0.0
                 }
                 _totalSpending.value = total
             }
     }
+
 
     private fun isInMonth(date: Date, month: Int, year: Int): Boolean {
         val cal = Calendar.getInstance().apply { time = date }
@@ -139,6 +147,9 @@ fun DashboardScreen(navController: NavController, viewModel: DashboardViewModel 
     val rupiahFormat = remember { NumberFormat.getCurrencyInstance(Locale("in", "ID")) }
     val transactionViewModel: TransactionViewModel = viewModel()
     val transactions = transactionViewModel.transactions.take(5)
+    val budgetViewModel: BudgetViewModel = viewModel()
+    val budgets = budgetViewModel.budgets
+
 
     Column(
         modifier = Modifier
@@ -211,6 +222,14 @@ fun DashboardScreen(navController: NavController, viewModel: DashboardViewModel 
         }
 
         Spacer(modifier = Modifier.height(12.dp))
+
+        Text("Your Budgets", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        budgets.forEach { budget ->
+            BudgetCard(budget = budget)
+        }
 
         // ✅ Balance Card
         Card(

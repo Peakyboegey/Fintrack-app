@@ -31,8 +31,9 @@ fun EditTransactionScreen(navController: NavHostController, type: String, id: St
     transaction?.let { trx ->
         var amount by remember { mutableStateOf(trx.amount.toString()) }
         var notes by remember { mutableStateOf(trx.notes) }
+        var category by remember { mutableStateOf(trx.category ?: "") }
 
-        Column(Modifier.padding(16.dp)) {
+        Column(modifier = Modifier.padding(16.dp)) {
             Text("Edit Transaction", style = MaterialTheme.typography.titleLarge)
 
             OutlinedTextField(
@@ -49,11 +50,19 @@ fun EditTransactionScreen(navController: NavHostController, type: String, id: St
                 modifier = Modifier.fillMaxWidth()
             )
 
+            OutlinedTextField(
+                value = category,
+                onValueChange = { category = it },
+                label = { Text("Category") },
+                modifier = Modifier.fillMaxWidth()
+            )
+
             Button(
                 onClick = {
                     viewModel.updateTransaction(trx.copy(
                         amount = amount.toDoubleOrNull() ?: trx.amount,
-                        notes = notes
+                        notes = notes,
+                        category = category
                     ))
                     navController.popBackStack()
                 },
@@ -62,9 +71,8 @@ fun EditTransactionScreen(navController: NavHostController, type: String, id: St
                 Text("Save")
             }
         }
-    } ?: run {
-        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            CircularProgressIndicator()
-        }
+    } ?: Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+        CircularProgressIndicator()
     }
 }
+
