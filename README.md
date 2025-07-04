@@ -43,6 +43,7 @@ Fintrack is built with modern tools and best practices:
 
 
 🔮 Planned Features
+
 🔐 User authentication (Login/Signup)
 
 📅 Recurring transactions & reminders
