@@ -55,6 +55,7 @@ Fintrack is built with modern tools and best practices:
 
 ---
 
-👨‍💻 About the Developer
-Fintrack is developed by @peakyboegey and @danendrapradnya, a passionate Android developer focused on creating productivity tools and financial apps that are user-friendly, elegant, and scalable.
+👨‍💻 Contributors
 
+- [@peakyboegey](https://github.com/peakyboegey)
+- [@danendrapradnya](https://github.com/danendrapradnya)
