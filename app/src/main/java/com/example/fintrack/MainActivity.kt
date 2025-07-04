@@ -6,6 +6,8 @@ import Screen.CategoryScreen
 import Screen.DashboardScreen
 import Screen.EditTransactionScreen
 import Screen.IncomeScreen
+import Screen.SettingsScreen
+import Screen.SettingsScreenWrapper
 import Screen.SpendingScreen
 import Screen.TransactionScreen
 import Screen.WelcomeScreen
@@ -32,6 +34,9 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import components.BottomNavBar
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.navigation.NavType
 import androidx.navigation.navArgument
 import com.google.firebase.FirebaseApp
@@ -45,8 +50,12 @@ class MainActivity : ComponentActivity() {
         FirebaseApp.initializeApp(this)
 
         setContent {
+            // 🔄 State untuk Dark Mode dan Currency
+            var isDarkMode by rememberSaveable { mutableStateOf(false) }
+            var selectedCurrency by rememberSaveable { mutableStateOf("Rupiah (Rp)") }
 
-            FintrackTheme {
+            // 🌙 Terapkan tema berdasarkan isDarkMode
+            FintrackTheme(darkTheme = isDarkMode) {
                 val navController = rememberNavController()
 
                 val currentBackStackEntry by navController.currentBackStackEntryAsState()
@@ -110,7 +119,7 @@ class MainActivity : ComponentActivity() {
                         composable("categories") {
                             CategoriesScreen(navController)
                         }
-                        composable("transaction"){
+                        composable("transaction") {
                             TransactionScreen(navController)
                         }
                         composable(
@@ -124,17 +133,25 @@ class MainActivity : ComponentActivity() {
                             val id = backStackEntry.arguments?.getString("id") ?: ""
                             EditTransactionScreen(navController, type, id)
                         }
-
                         composable("budgeting") {
-                            BudgetScreen() //
+                            BudgetScreen()
                         }
-
+                        composable("settings") {
+                            SettingsScreen(
+                                isDarkMode = isDarkMode,
+                                onToggleDarkMode = { isDarkMode = it },
+                                selectedCurrency = selectedCurrency,
+                                onCurrencyChange = { selectedCurrency = it },
+                                onBack = { navController.popBackStack() }
+                            )
+                        }
                     }
                 }
             }
         }
     }
 }
+
 
 
 

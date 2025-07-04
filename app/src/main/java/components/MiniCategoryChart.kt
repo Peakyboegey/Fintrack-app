@@ -64,7 +64,7 @@ fun MiniCategoryChart(viewModel: CategoriesViewModel = viewModel()) {
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             Text(
-                "Pengeluaran per Kategori",
+                "Spending on Categories",
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.SemiBold
             )

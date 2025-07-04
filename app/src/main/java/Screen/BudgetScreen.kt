@@ -16,6 +16,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -25,27 +26,29 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
-import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Icon // ✅ Bukan yang dari material (lama)
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.SegmentedButtonDefaults.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.google.firebase.firestore.FirebaseFirestore
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.input.KeyboardType
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import java.util.Calendar
@@ -152,42 +155,61 @@ fun BudgetScreen(
         modifier = Modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
-            .padding(16.dp)
+            .padding(20.dp)
     ) {
-        Text("📊 Budgeting", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-        Spacer(modifier = Modifier.height(16.dp))
+        Text(
+            "📊 Budgeting",
+            style = MaterialTheme.typography.headlineSmall,
+            fontWeight = FontWeight.Bold
+        )
 
-        // Input Form
-        ExposedDropdownMenuBox(expanded = expanded, onExpandedChange = { expanded = !expanded }) {
+        Spacer(modifier = Modifier.height(20.dp))
+
+        // === Select Category ===
+        ExposedDropdownMenuBox(
+            expanded = expanded,
+            onExpandedChange = { expanded = !expanded }
+        ) {
             OutlinedTextField(
                 value = selectedCategory,
                 onValueChange = {},
                 readOnly = true,
-                label = { Text("Select Category") },
+                label = { Text("Category") },
                 trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded) },
-                modifier = Modifier.menuAnchor().fillMaxWidth()
+                shape = RoundedCornerShape(12.dp),
+                modifier = Modifier
+                    .menuAnchor()
+                    .fillMaxWidth()
             )
-            ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+            ExposedDropdownMenu(
+                expanded = expanded,
+                onDismissRequest = { expanded = false }
+            ) {
                 categories.forEach { category ->
-                    DropdownMenuItem(text = { Text(category) }, onClick = {
-                        selectedCategory = category
-                        expanded = false
-                    })
+                    DropdownMenuItem(
+                        text = { Text(category) },
+                        onClick = {
+                            selectedCategory = category
+                            expanded = false
+                        }
+                    )
                 }
             }
         }
 
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(10.dp))
 
+        // === Budget Input ===
         OutlinedTextField(
             value = budgetInput,
             onValueChange = { budgetInput = it },
             label = { Text("Budget Amount (Rp)") },
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+            shape = RoundedCornerShape(12.dp),
             modifier = Modifier.fillMaxWidth()
         )
 
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(14.dp))
 
         Button(
             onClick = {
@@ -216,14 +238,15 @@ fun BudgetScreen(
                     Toast.makeText(context, "Please fill correctly", Toast.LENGTH_SHORT).show()
                 }
             },
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(10.dp)
         ) {
             Text("Save Budget")
         }
 
-        Spacer(modifier = Modifier.height(24.dp))
+        Spacer(modifier = Modifier.height(26.dp))
 
-        // List Budgets
+        // === Budget Cards ===
         budgets.forEach { budget ->
             val progress = if (budget.budgetAmount > 0) {
                 (budget.usedAmount / budget.budgetAmount).coerceIn(0.0, 1.0)
@@ -231,31 +254,75 @@ fun BudgetScreen(
             val over = budget.usedAmount > budget.budgetAmount
 
             Card(
-                modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
-                shape = RoundedCornerShape(12.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 6.dp),
+                shape = RoundedCornerShape(16.dp),
                 colors = CardDefaults.cardColors(
-                    containerColor = if (over) Color(0xFFFFEBEE) else Color.White
-                )
+                    containerColor = if (over) Color(0xFFFFF1F1) else Color(0xFFF7F7F7)
+                ),
+                elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
-                    Text(budget.category, fontWeight = FontWeight.SemiBold)
-                    Spacer(modifier = Modifier.height(8.dp))
-                    LinearProgressIndicator(
-                        progress = progress.toFloat(),
-                        color = if (over) Color.Red else Color(0xFF4CAF50),
-                        trackColor = Color(0xFFE0E0E0),
-                        modifier = Modifier.fillMaxWidth().height(8.dp)
-                    )
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text("Used: Rp${budget.usedAmount.toInt()} / Rp${budget.budgetAmount.toInt()}", fontSize = 12.sp)
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = budget.category,
+                            fontWeight = FontWeight.SemiBold,
+                            fontSize = 16.sp
+                        )
+
+                        IconButton(onClick = {
+                            viewModel.deleteBudget(budget)
+                        }) {
+                            Icon(
+                                imageVector = Icons.Default.Delete,
+                                contentDescription = "Delete",
+                                tint = Color(0xFFD32F2F)
+                            )
+                        }
+                    }
 
                     Spacer(modifier = Modifier.height(8.dp))
-                    Button(
-                        onClick = { viewModel.deleteBudget(budget) },
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFD32F2F)),
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Text("Delete", color = Color.White)
+
+                    LinearProgressIndicator(
+                        progress = progress.toFloat(),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(8.dp),
+                        color = if (over) Color(0xFFD32F2F) else Color(0xFF4CAF50),
+                        trackColor = Color(0xFFE0E0E0)
+                    )
+
+                    Spacer(modifier = Modifier.height(6.dp))
+
+                    Text(
+                        "Used: Rp${budget.usedAmount.toInt()} / Rp${budget.budgetAmount.toInt()}",
+                        fontSize = 12.sp,
+                        color = Color.Gray
+                    )
+
+                    if (over) {
+                        Spacer(modifier = Modifier.height(6.dp))
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Warning,
+                                contentDescription = null,
+                                tint = Color(0xFFD32F2F),
+                                modifier = Modifier.size(16.dp)
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(
+                                "Budget exceeded!",
+                                fontSize = 12.sp,
+                                color = Color(0xFFD32F2F)
+                            )
+                        }
                     }
                 }
             }
@@ -267,5 +334,6 @@ fun BudgetScreen(
         }
     }
 }
+
 
 

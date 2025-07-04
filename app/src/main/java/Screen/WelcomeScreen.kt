@@ -46,89 +46,66 @@ import com.example.fintrack.R
 
 @Composable
 fun WelcomeScreen(navController: NavController) {
-    Box(
+    val backgroundColor = Color(0xFFE3FCE5) // Hijau lembut
+    val primaryTextColor = Color(0xFF1B5E20) // Hijau tua
+
+    Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(
-                Brush.verticalGradient(
-                    colors = listOf(Color.White, Color(0xFFD0E8FF))
-                )
-            )
+            .background(backgroundColor)
+            .padding(32.dp),
+        verticalArrangement = Arrangement.SpaceBetween
     ) {
-        // Hiasan dekoratif di sudut-sudut
-        Canvas(modifier = Modifier.fillMaxSize()) {
-            // circle top-left
-            drawCircle(
-                color = Color(0xFFB3E5FC),
-                radius = size.minDimension * 0.3f,
-                center = Offset(x = 0f, y = 0f)
-            )
-            // circle bottom-right
-            drawCircle(
-                color = Color(0xFFB3E5FC).copy(alpha = 0.5f),
-                radius = size.minDimension * 0.25f,
-                center = Offset(x = size.width, y = size.height)
-            )
-        }
+        Spacer(modifier = Modifier.height(40.dp))
 
-        // Logo di tengah
-        Box(
-            modifier = Modifier
-                .size(160.dp)
-                .align(Alignment.Center)
-                .clip(CircleShape)
-                .background(Color.White)
-                .shadow(8.dp, CircleShape),
-            contentAlignment = Alignment.Center
-        ) {
-            Image(
-                painter = painterResource(id = R.drawable.smartphone),
-                contentDescription = "Fintrack Logo",
-                modifier = Modifier.size(100.dp)
-            )
-        }
+        // Logo Placeholder (bisa diganti Image jika punya aset logo)
+        Image(
+            painter = painterResource(id = R.drawable.smartphone),
+            contentDescription = "Logo",
+            modifier = Modifier.size(80.dp)
+        )
 
-        // Teks & tombol di bagian bawah
-        Column(
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .padding(horizontal = 32.dp, vertical = 40.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
+
+        // Judul dan Deskripsi
+        Column {
             Text(
-                text = "Welcome to Fintrack",
-                fontSize = 24.sp,
+                text = "Track Your\nSpending\nEffortlessly",
+                color = primaryTextColor,
+                fontSize = 32.sp,
                 fontWeight = FontWeight.Bold,
-                color = Color(0xFF1A237E)
+                lineHeight = 38.sp
             )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
             Text(
-                text = "Smart way to manage your money.",
-                fontSize = 16.sp,
-                color = Color(0xFF455A64),
-                textAlign = TextAlign.Center
+                text = "Manage your finances with ease using our clean, intuitive interface. Set goals, track progress, and take control.",
+                color = primaryTextColor.copy(alpha = 0.8f),
+                fontSize = 14.sp,
+                lineHeight = 20.sp
             )
-            Button(
-                onClick = {
-                    navController.navigate("dashboard") {
-                        popUpTo("welcome") { inclusive = true }
-                    }
-                },
-                modifier = Modifier
-                    .width(140.dp)
-                    .height(44.dp),
-                shape = RoundedCornerShape(22.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFF2196F3),
-                    contentColor = Color.White
-                )
-            ) {
-                Text("Get Started", fontSize = 14.sp, fontWeight = FontWeight.Medium)
-            }
+        }
+
+        // Tombol Get Started saja
+        Button(
+            onClick = {
+                navController.navigate("dashboard") {
+                    popUpTo("welcome") { inclusive = true }
+                }
+            },
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(48.dp),
+            shape = RoundedCornerShape(24.dp),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = primaryTextColor,
+                contentColor = Color.White
+            )
+        ) {
+            Text("Get Started", fontSize = 16.sp)
         }
     }
 }
-
 
 
 

@@ -56,6 +56,7 @@ import java.util.Calendar
 import java.util.Date
 import java.util.Locale
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.IconButton
 import kotlin.Pair
 import components.BudgetCard
 
@@ -150,7 +151,6 @@ fun DashboardScreen(navController: NavController, viewModel: DashboardViewModel 
     val budgetViewModel: BudgetViewModel = viewModel()
     val budgets = budgetViewModel.budgets
 
-
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -164,8 +164,18 @@ fun DashboardScreen(navController: NavController, viewModel: DashboardViewModel 
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text("Dashboard", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-            Icon(Icons.Default.Settings, contentDescription = "Settings", tint = Color.Gray)
+            Text(
+                "Dashboard",
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold
+            )
+            IconButton(onClick = { navController.navigate("settings") }) {
+                Icon(
+                    imageVector = Icons.Default.Settings,
+                    contentDescription = "settings",
+                    tint = Color.Gray
+                )
+            }
         }
 
         Spacer(modifier = Modifier.height(20.dp))
@@ -187,8 +197,16 @@ fun DashboardScreen(navController: NavController, viewModel: DashboardViewModel 
             )
 
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Prev", tint = Color.Gray)
-                Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = "Next", tint = Color.Gray)
+                Icon(
+                    Icons.AutoMirrored.Filled.ArrowBack,
+                    contentDescription = "Prev",
+                    tint = Color.Gray
+                )
+                Icon(
+                    Icons.AutoMirrored.Filled.ArrowForward,
+                    contentDescription = "Next",
+                    tint = Color.Gray
+                )
                 Spacer(modifier = Modifier.width(8.dp))
                 Icon(Icons.Default.FilterList, contentDescription = "Filter", tint = Color.Gray)
             }
@@ -204,26 +222,31 @@ fun DashboardScreen(navController: NavController, viewModel: DashboardViewModel 
             SummaryCard(
                 title = "💰 Income",
                 amount = rupiahFormat.format(totalIncome).replace("Rp", "Rp "),
-                backgroundColor = Color(0xFFD0F0C0),
+                backgroundColor = Color(0xFFEFEFEF),
                 icon = Icons.Default.ArrowDropUp,
                 iconColor = Color(0xFF2E7D32),
+                amountTextColor = Color(0xFF2E7D32),
                 modifier = Modifier.weight(1f)
             )
 
             SummaryCard(
                 title = "🛍️ Spending",
                 amount = rupiahFormat.format(totalSpending).replace("Rp", "Rp "),
-                backgroundColor = Color(0xFFFFE0E0),
+                backgroundColor = Color(0xFFEFEFEF),
                 icon = Icons.Default.ArrowDropDown,
                 iconColor = Color(0xFFD32F2F),
+                amountTextColor = Color(0xFFD32F2F),
                 modifier = Modifier.weight(1f)
             )
-
         }
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        Text("Your Budgets", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+        Text(
+            "Your Budgets",
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.SemiBold
+        )
 
         Spacer(modifier = Modifier.height(12.dp))
 
@@ -231,9 +254,11 @@ fun DashboardScreen(navController: NavController, viewModel: DashboardViewModel 
             BudgetCard(budget = budget)
         }
 
+        Spacer(modifier = Modifier.height(16.dp))
+
         // ✅ Balance Card
         Card(
-            colors = CardDefaults.cardColors(containerColor = Color(0xFFDEEAFE)),
+            colors = CardDefaults.cardColors(containerColor = Color(0xFFEFEFEF)),
             shape = RoundedCornerShape(12.dp),
             modifier = Modifier.fillMaxWidth()
         ) {
@@ -284,13 +309,17 @@ fun DashboardScreen(navController: NavController, viewModel: DashboardViewModel 
                         Text(
                             text = if (transaction.type == "income") "Income" else "Spending",
                             fontSize = 12.sp,
-                            color = if (transaction.type == "income") Color(0xFF2E7D32) else Color(0xFFD32F2F)
+                            color = if (transaction.type == "income") Color(0xFF2E7D32) else Color(
+                                0xFFD32F2F
+                            )
                         )
                     }
                     Text(
                         text = "Rp ${transaction.amount.toInt()}",
                         fontWeight = FontWeight.Bold,
-                        color = if (transaction.type == "income") Color(0xFF2E7D32) else Color(0xFFD32F2F)
+                        color = if (transaction.type == "income") Color(0xFF2E7D32) else Color(
+                            0xFFD32F2F
+                        )
                     )
                 }
             }
@@ -299,9 +328,11 @@ fun DashboardScreen(navController: NavController, viewModel: DashboardViewModel 
                 Text("No transactions yet.", color = Color.Gray, fontSize = 13.sp)
             }
         }
-
     }
 }
+
+
+
 
 @Composable
 fun SummaryCard(
@@ -310,10 +341,11 @@ fun SummaryCard(
     backgroundColor: Color,
     icon: ImageVector,
     iconColor: Color,
-    modifier: Modifier = Modifier // Tambahkan ini agar bisa dikontrol dari luar
+    amountTextColor: Color, // ✅ tambahkan warna teks amount
+    modifier: Modifier = Modifier
 ) {
     Card(
-        modifier = modifier, // ✅ Gunakan modifier dari parameter
+        modifier = modifier,
         colors = CardDefaults.cardColors(containerColor = backgroundColor),
         shape = RoundedCornerShape(12.dp)
     ) {
@@ -326,7 +358,12 @@ fun SummaryCard(
         ) {
             Column {
                 Text(title, fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
-                Text(amount, fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                Text(
+                    amount,
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = amountTextColor // ✅ gunakan warna dari parameter
+                )
             }
             Icon(
                 icon,
